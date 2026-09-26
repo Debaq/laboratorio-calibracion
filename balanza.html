@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posturógrafo de Balanza</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Posturógrafo de balanza</h1>
+        <p class="sub">Plataforma de fuerza con 4 celdas de carga y amplificador HX711: fuerza vertical y centro de presión (CoP).</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados</button>
+        <button data-tab="guardados"><span class="num">5</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> obtener el factor de escala de cada celda de carga (N por cuenta del HX711) y verificar que la
+                plataforma mide bien la <strong>fuerza vertical</strong> y el <strong>centro de presión (CoP)</strong>, que es la variable principal de la posturografía.</div>
+
+            <h2>Principio: estática de un cuerpo rígido</h2>
+            <p>Cada celda <em>i</em>, ubicada en (x<sub>i</sub>, y<sub>i</sub>), entrega un número crudo r<sub>i</sub>. Después de la tara (plataforma vacía, r0<sub>i</sub>):</p>
+            <div class="math">F_i = k_i · (r_i − r0_i)                    k_i: factor de la celda [N/cuenta]
+
+Con una masa M en (x, y):
+  Σ F_i          = M·g          (equilibrio de fuerzas)
+  Σ F_i · x_i    = M·g·x        (equilibrio de momentos)
+  Σ F_i · y_i    = M·g·y
+
+Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i</div>
+            <p>Cada carga aporta <strong>3 ecuaciones</strong> y hay <strong>4 incógnitas</strong> (k<sub>1</sub>…k<sub>4</sub>). Con varias masas en varias
+                posiciones se resuelve por mínimos cuadrados. Así no hace falta calibrar cada celda por separado y la calibración queda
+                ajustada a la plataforma completa, tal como se usa.</p>
+            <p>La gravedad local se calcula con la latitud: en Valdivia g ≈ 9,8015 m/s², no 9,81. La diferencia es de 0,09 %.</p>
+
+            <h3>¿Por qué el CoP empeora con cargas pequeñas?</h3>
+            <p>El CoP es un cociente entre momento y fuerza. El mismo ruido de las celdas produce un error de CoP inversamente proporcional a la carga:
+                <code>u(CoP) ≈ u(F)·ℓ / (M·g)</code>. Por eso se valida con masas parecidas al peso de las personas que se van a evaluar.</p>
+
+            <h2>Materiales</h2>
+            <ul>
+                <li>Plataforma con 4 celdas y HX711 (uno por celda), Arduino/ESP32 que muestre las 4 lecturas crudas.</li>
+                <li>Masas conocidas (discos de gimnasio pesados en una balanza calibrada, o pesas patrón). Anote la masa real, no la nominal.</li>
+                <li>Plantilla o marcas en la plataforma con las posiciones de carga, medidas desde el centro geométrico.</li>
+                <li>Regla o huincha para ubicar las celdas y las posiciones (±1 mm).</li>
+            </ul>
+
+            <h2>Sistema de coordenadas</h2>
+            <div class="math">          +y (adelante / anterior)
+               ↑
+     C1 ●──────┼──────● C2
+        │      │      │
+   ─────┼──────●──────┼────→ +x (derecha / lateral)
+        │   (0,0)     │
+     C4 ●──────┼──────● C3</div>
+            <p>Origen en el centro de la plataforma. Mida la posición de cada celda en su punto de apoyo (no en el borde de la placa).</p>
+
+            <h2>Procedimiento</h2>
+            <ol class="steps">
+                <li><strong>Estabilice</strong>: encienda la electrónica 15 min antes. Nivele la plataforma sobre un piso firme.</li>
+                <li><strong>Mida la geometría</strong>: posiciones de las 4 celdas y de los puntos de carga.</li>
+                <li><strong>Pese las masas</strong> en una balanza de referencia y estime su incertidumbre.</li>
+                <li><strong>Complete la Preparación</strong> y genere el plan.</li>
+                <li><strong>Siga el plan</strong>: tara → cargas crecientes en cada posición → descarga → tara final. Coloque la masa centrada sobre la marca,
+                    espere 5 s (las celdas “reptan” al principio) y registre las 4 lecturas crudas.</li>
+                <li><strong>Revise</strong> los factores k: deben ser positivos y parecidos entre sí si las celdas son iguales.</li>
+                <li><strong>Copie el código</strong> generado a su firmware y verifique con una masa que no se usó en la calibración.</li>
+            </ol>
+
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Plataforma nivelada y sin contacto con objetos alrededor</label>
+                <label class="check"><input type="checkbox" data-check> Electrónica encendida ≥ 15 min</label>
+                <label class="check"><input type="checkbox" data-check> Coordenadas de las 4 celdas medidas desde el centro</label>
+                <label class="check"><input type="checkbox" data-check> Masas pesadas en balanza de referencia (valor real anotado)</label>
+                <label class="check"><input type="checkbox" data-check> Posiciones de carga marcadas en la superficie</label>
+                <label class="check"><input type="checkbox" data-check> Tolerancias definidas (fuerza y CoP)</label>
+            </div>
+
+            <h2>Errores comunes</h2>
+            <ul>
+                <li><strong>Celda con factor negativo</strong>: cables A+/A− invertidos, o la celda montada al revés.</li>
+                <li><strong>Celdas en orden distinto al configurado</strong>: el CoP sale espejado. Verifique empujando cada esquina.</li>
+                <li><strong>Plataforma que no apoya en las 4 celdas</strong> (cojea): una celda lee casi nada con cargas pequeñas.</li>
+                <li><strong>Masa apoyada fuera de la marca</strong>: 5 mm de error de posición son 5 mm de “error” de CoP.</li>
+            </ul>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+        </section>
+
+        <section class="panel" id="tab-config" hidden>
+            <div class="card">
+                <h3>Experimento y equipo</h3>
+                <div class="grid two">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: Plataforma A — calibración inicial"></div>
+                    <div class="field"><label>Celdas de carga</label><input type="text" data-bind="sensor.model"></div>
+                    <div class="field"><label>Conversor</label><input type="text" data-bind="sensor.adc"></div>
+                    <div class="field"><label>Notas</label><input type="text" data-bind="sensor.notes"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Posición de las celdas <small class="muted">(mm, origen en el centro)</small></h3>
+                <div id="cells-editor"></div>
+            </div>
+
+            <div class="card">
+                <h3>Plan de carga</h3>
+                <div class="grid three">
+                    <div class="field"><label>Masas <small>(kg)</small></label><input type="text" data-bind="masses_kg" data-type="list">
+                        <div class="help">Masa real de cada carga, separadas por “;”. Ej.: 10; 20; 40</div></div>
+                    <div class="field"><label>Ciclos</label><input type="text" inputmode="numeric" data-bind="cycles" data-type="number"></div>
+                    <div class="field"><label class="inline-check"><input type="checkbox" data-bind="bidirectional"> Cargar y descargar (mide histéresis)</label></div>
+                </div>
+                <h4>Posiciones de carga <small class="muted">(mm)</small></h4>
+                <div id="pos-editor"></div>
+                <p class="muted small" id="plan-size"></p>
+            </div>
+
+            <div class="card">
+                <h3>Incertidumbres y tolerancias</h3>
+                <div class="grid three">
+                    <div class="field"><label>u(masa) <small>(g)</small></label><input type="text" inputmode="decimal" data-bind="uMass_g" data-type="number">
+                        <div class="help">Incertidumbre estándar de la balanza de referencia.</div></div>
+                    <div class="field"><label>Resolución de posición <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="resPos_mm" data-type="number"></div>
+                    <div class="field"><label>Tolerancia de fuerza <small>(% carga máx.)</small></label><input type="text" inputmode="decimal" data-bind="tolFz_pct" data-type="number"></div>
+                    <div class="field"><label>Tolerancia de CoP <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="tolCoP_mm" data-type="number"></div>
+                    <div class="field"><label>Latitud <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="env.lat" data-type="number"></div>
+                    <div class="field"><label>Altitud <small>(m)</small></label><input type="text" inputmode="decimal" data-bind="env.alt" data-type="number"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/balanza-model.js"></script>
+    <script src="js/modules/balanza-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor de Presión</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Sensor de presión diferencial</h1>
+        <p class="sub">Calibración con manómetro de agua. Resultado: ecuación V → ΔP con incertidumbre, reutilizable en Venturi y Pitot.</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados</button>
+        <button data-tab="guardados"><span class="num">5</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> obtener la ecuación que convierte la salida del sensor (V, mV o cuentas) en presión diferencial (Pa),
+                junto con su incertidumbre, linealidad e histéresis.</div>
+
+            <h2>Principio: manómetro en U</h2>
+            <div class="math">      rama abierta        rama presurizada
+          │  │                │  │
+    h_B → │▓▓│                │  │ ← aire a presión (jeringa + sensor)
+          │▓▓│                │  │
+          │▓▓│      Δh        │  │
+          │▓▓│                │▓▓│ ← h_A
+          │▓▓└────────────────┘▓▓│
+          └──────── agua ────────┘
+
+ΔP = (ρ_agua(T) − ρ_aire) · g_local · Δh        Δh = h_B − h_A</div>
+            <ul>
+                <li>El sensor debe ver <strong>solo aire</strong> en su puerto. Así mide la presión del aire atrapado, que empuja el agua. La altura a la que está
+                    montado el sensor no importa, porque el aire pesa unas 800 veces menos que el agua.</li>
+                <li>Se miden <strong>los dos meniscos</strong>. Leer una sola rama supone que la otra no se movió, y eso sólo es cierto si su área es mucho mayor
+                    (estanque). Para ese caso existe el modo “columna con estanque”.</li>
+                <li>La densidad del agua se calcula con la temperatura (Tanaka 2001): 998,21 kg/m³ a 20 °C y 995,65 kg/m³ a 30 °C.
+                    Un error de 5 °C en la temperatura cambia ΔP en 0,1 %.</li>
+                <li>g se calcula con la latitud (Valdivia ≈ 9,8015 m/s²).</li>
+            </ul>
+
+            <h3>Calibración en el sentido de uso</h3>
+            <p>Lo que se necesita después es <em>calcular ΔP a partir de V</em>, así que se ajusta directamente:</p>
+            <div class="math">ΔP = c₀ + c₁·V            (o + c₂·V² si la prueba F muestra que la curvatura es real)</div>
+            <p>Se reporta el error estándar de la estimación (SEE) y la incertidumbre de predicción en todo el rango.
+                Fuera del rango medido la ecuación <strong>no está validada</strong>.</p>
+
+            <h2>Materiales</h2>
+            <ul>
+                <li>Manguera transparente en U, las dos ramas del mismo diámetro (así la capilaridad se cancela), fija a una tabla vertical.</li>
+                <li>Regla o cinta milimetrada al lado de cada rama (o una sola regla centrada).</li>
+                <li>Válvula de 3 vías o conector en T: rama presurizada ↔ sensor ↔ jeringa.</li>
+                <li>Agua con unas gotas de colorante; termómetro.</li>
+                <li>Sensor (ej. MPX5010DP, MPXV7002) y un multímetro o ADC para leer su salida.</li>
+            </ul>
+
+            <h2>Procedimiento</h2>
+            <ol class="steps">
+                <li><strong>Monte y verifique la verticalidad</strong> con un nivel. Llene la U hasta la mitad aproximadamente.</li>
+                <li><strong>Revise fugas</strong>: suba la presión, cierre la llave y observe 1 minuto. Si el menisco baja, hay fuga.</li>
+                <li><strong>Mida la temperatura del agua</strong> y complete la Preparación.</li>
+                <li><strong>Siga el plan</strong>: cero con las dos ramas abiertas → subir la presión por niveles con la jeringa → bajar → cero final.</li>
+                <li><strong>Lea los meniscos</strong> en su parte más baja, con los ojos a la altura del agua (evita el error de paralaje). Espere 10 s antes de leer.</li>
+                <li><strong>Revise los residuos</strong> y guarde el experimento. Su ecuación queda disponible en los módulos Venturi y Pitot.</li>
+            </ol>
+
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Ramas verticales y del mismo diámetro</label>
+                <label class="check"><input type="checkbox" data-check> Sin agua en la manguera del sensor (solo aire)</label>
+                <label class="check"><input type="checkbox" data-check> Sin burbujas dentro de la columna de agua</label>
+                <label class="check"><input type="checkbox" data-check> Prueba de fuga superada (1 min sin movimiento)</label>
+                <label class="check"><input type="checkbox" data-check> Temperatura del agua medida</label>
+                <label class="check"><input type="checkbox" data-check> Sensor alimentado con fuente estable (la salida suele ser proporcional a Vcc)</label>
+            </div>
+
+            <h2>Errores comunes</h2>
+            <ul>
+                <li><strong>Usar la altura del sensor como cero</strong>: solo es válido si el sensor está lleno de agua, lo que puede dañarlo.</li>
+                <li><strong>Sensor ratiométrico</strong>: si Vcc cambia de 5,0 a 4,8 V, la salida cambia 4 %. Mida Vcc o use una fuente regulada.</li>
+                <li><strong>Calibrar 0–20 % del rango</strong> y usarlo al 80 %: la ecuación no vale fuera de lo medido.</li>
+                <li><strong>Puertos invertidos</strong> (P1/P2): da presiones negativas.</li>
+            </ul>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+        </section>
+
+        <section class="panel" id="tab-config" hidden>
+            <div class="card">
+                <h3>Experimento y sensor</h3>
+                <div class="grid three">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: MPX5010DP #2 — 2026-09-25"></div>
+                    <div class="field"><label>Modelo</label><input type="text" data-bind="sensor.model"></div>
+                    <div class="field"><label>Fabricante</label><input type="text" data-bind="sensor.maker"></div>
+                    <div class="field"><label>Unidad de salida</label>
+                        <select data-bind="sensor.outputUnit"><option value="V">V</option><option value="mV">mV</option><option value="cuentas">cuentas ADC</option></select></div>
+                    <div class="field"><label>Fondo de escala <small>(Pa)</small></label><input type="text" inputmode="decimal" data-bind="sensor.FS_Pa" data-type="number">
+                        <div class="help">Del datasheet (ej. 10 kPa = 10000). Se usa para los %.</div></div>
+                    <div class="field"><label>Tolerancia <small>(% FS)</small></label><input type="text" inputmode="decimal" data-bind="tol_pctFS" data-type="number"></div>
+                </div>
+                <div class="field" style="margin-top:12px"><label>Notas (tensión de alimentación, ADC, filtro)</label><input type="text" data-bind="sensor.notes"></div>
+            </div>
+
+            <div class="card">
+                <h3>Manómetro</h3>
+                <div class="grid three">
+                    <div class="field"><label>Tipo</label>
+                        <select data-bind="mode"><option value="U">Tubo en U (dos meniscos)</option><option value="simple">Columna con estanque grande</option></select></div>
+                    <div class="field" data-show-if="mode=simple"><label>Nivel con presión cero h₀ <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="h0_mm" data-type="number"></div>
+                    <div class="field"><label>Resolución de la regla <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="resRuler_mm" data-type="number"></div>
+                    <div class="field"><label>Temperatura del agua <small>(°C)</small></label><input type="text" inputmode="decimal" data-bind="water.temp" data-type="number"></div>
+                    <div class="field"><label>u(temperatura) <small>(°C)</small></label><input type="text" inputmode="decimal" data-bind="water.uTemp" data-type="number"></div>
+                </div>
+                <div id="rho-info" class="muted small" style="margin-top:8px"></div>
+            </div>
+
+            <div class="card">
+                <h3>Plan</h3>
+                <div class="grid three">
+                    <div class="field"><label>Niveles de Δh <small>(mm)</small></label><input type="text" data-bind="levels" data-type="list">
+                        <div class="help">Hasta cubrir el rango de uso. 100 mm ≈ 980 Pa.</div></div>
+                    <div class="field"><label>Ciclos</label><input type="text" inputmode="numeric" data-bind="cycles" data-type="number"></div>
+                    <div class="field"><label class="inline-check"><input type="checkbox" data-bind="bidirectional"> Subir y bajar (histéresis)</label></div>
+                    <div class="field"><label>Grado del ajuste</label>
+                        <select data-bind="degree" data-type="auto"><option value="auto">Automático (prueba F)</option><option value="1">Lineal</option><option value="2">Cuadrático</option></select></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Lugar</h3>
+                <div class="grid three">
+                    <div class="field"><label>Latitud <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="env.lat" data-type="number"></div>
+                    <div class="field"><label>Altitud <small>(m)</small></label><input type="text" inputmode="decimal" data-bind="env.alt" data-type="number"></div>
+                    <div class="field"><label>Presión atmosférica <small>(hPa)</small></label><input type="text" inputmode="decimal" data-bind="env.p_hPa" data-type="number"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/presion-model.js"></script>
+    <script src="js/modules/presion-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tubo de Pitot</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body data-device="pitot">
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Tubo de Pitot</h1>
+        <p class="sub">Validación de un Pitot (o Pitot-estático): coeficiente C frente a una velocidad de referencia.</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados</button>
+        <button data-tab="guardados"><span class="num">5</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> verificar que el Pitot entrega la velocidad correcta y obtener su coeficiente C.
+                <br><strong>Requisito:</strong> tener calibrado el sensor de presión en el módulo <a href="presion.html">Sensor de presión</a>.</div>
+
+            <h2>Principio: presión dinámica</h2>
+            <div class="math">  toma total (frente)   ──►  P_total  = P_estática + ½ ρ v²
+  tomas laterales       ──►  P_estática
+
+ΔP = P_total − P_estática = ½ ρ v²       →   v = C · √(2ΔP / ρ)</div>
+            <ul>
+                <li>ρ es la densidad del <strong>aire</strong> (≈ 1,2 kg/m³), calculada con temperatura, presión y humedad.</li>
+                <li>ΔP crece con v²: a 2 m/s son solo 2,4 Pa y a 10 m/s, 60 Pa. Elija un sensor de rango adecuado (±500 Pa, ±2 kPa).</li>
+                <li>El Pitot mide la velocidad <strong>en su punta</strong>. Si la referencia es un caudal, la velocidad media es menor que la del centro:
+                    en flujo turbulento, <code>v_media ≈ 0,82 · v_centro</code> (ley de potencia 1/7). Ingréselo como factor de perfil.</li>
+            </ul>
+            <h3>Incertidumbre de C</h3>
+            <div class="math">(u_C / C)² = (u_vref / vref)² + (½ · u_ΔP / ΔP)² + (½ · u_ρ / ρ)²</div>
+
+            <h2>Procedimiento</h2>
+            <ol class="steps">
+                <li><strong>Alinee el Pitot</strong> con el flujo (±5° todavía da menos de 1 % de error, pero alinee lo mejor posible).</li>
+                <li><strong>Ubique la referencia</strong>: el anemómetro en el mismo punto del ducto, o un caudalímetro en serie.</li>
+                <li><strong>Seleccione la calibración de presión</strong> y registre las condiciones del aire.</li>
+                <li><strong>Siga el plan</strong>: para cada velocidad del ventilador espere 30 s y registre la salida del sensor y la referencia.</li>
+                <li><strong>Revise C vs Re</strong> y los puntos de baja velocidad, que son los de mayor incertidumbre.</li>
+            </ol>
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Mangueras total/estática conectadas al puerto correcto del sensor</label>
+                <label class="check"><input type="checkbox" data-check> Pitot alineado con el eje del ducto</label>
+                <label class="check"><input type="checkbox" data-check> Referencia en el mismo punto o con factor de perfil definido</label>
+                <label class="check"><input type="checkbox" data-check> Cero del sensor verificado con el ventilador apagado</label>
+            </div>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+        </section>
+
+        <section class="panel" id="tab-config" hidden>
+            <div class="card">
+                <h3>Experimento</h3>
+                <div class="grid two">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: Pitot 4 mm — túnel de viento"></div>
+                    <div class="field"><label>Notas</label><input type="text" data-bind="notes"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Calibración del sensor de presión</h3>
+                <div class="field"><label>Sensor ΔP (total − estática)</label>
+                    <select id="calA-sel"></select>
+                    <label class="button" style="margin-top:6px">o importar JSON<input type="file" id="calA-file" accept=".json" hidden></label>
+                    <div class="help" id="calA-info"></div></div>
+            </div>
+
+            <div class="card">
+                <h3>Aire y ducto</h3>
+                <div class="grid three">
+                    <div class="field"><label>Temperatura <small>(°C)</small></label><input type="text" inputmode="decimal" data-bind="env.temp" data-type="number"></div>
+                    <div class="field"><label>Presión atmosférica <small>(hPa)</small></label><input type="text" inputmode="decimal" data-bind="env.p_hPa" data-type="number"></div>
+                    <div class="field"><label>Humedad relativa <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="env.rh" data-type="number"></div>
+                    <div class="field"><label>Diámetro del ducto <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="ductD_mm" data-type="number"><div class="help">Para Reynolds y referencia por caudal.</div></div>
+                </div>
+                <p class="muted small" id="fluid-info"></p>
+            </div>
+
+            <div class="card">
+                <h3>Referencia y plan</h3>
+                <div class="grid three">
+                    <div class="field"><label>Referencia</label>
+                        <select data-bind="refMode"><option value="velocidad">Anemómetro (velocidad local)</option><option value="caudal">Caudal (velocidad media)</option></select></div>
+                    <div class="field"><label>u(referencia) <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="uRef_pct" data-type="number"></div>
+                    <div class="field" data-show-if="refMode=caudal"><label>Factor de perfil v_media / v_Pitot</label><input type="text" inputmode="decimal" data-bind="profile" data-type="number">
+                        <div class="help">Pitot en el centro con flujo turbulento: 0,82. Laminar: 0,5.</div></div>
+                    <div class="field"><label>Velocidades del ventilador</label><input type="text" data-bind="levels" data-type="list"></div>
+                    <div class="field"><label>Repeticiones por velocidad</label><input type="text" inputmode="numeric" data-bind="reps" data-type="number"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/presion-model.js"></script>
+    <script src="js/modules/flujo-model.js"></script>
+    <script src="js/modules/flujo-ui.js"></script>
+</body>
+</html>

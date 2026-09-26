@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Calibración</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="hero">
+        <h1>Laboratorio de Calibración</h1>
+        <p>Guías y herramientas para calibrar los sensores de un posturógrafo y de sistemas de medición de presión y caudal.
+            Cada módulo explica qué hacer, genera el plan de mediciones paso a paso y calcula el error, la repetibilidad y la incertidumbre.</p>
+        <div class="flow" aria-label="Flujo de trabajo">
+            <span>1 · Leer la guía</span>→<span>2 · Preparar el montaje</span>→<span>3 · Medir siguiendo el plan</span>→<span>4 · Interpretar resultados</span>→<span>5 · Guardar e informar</span>
+        </div>
+    </header>
+
+    <main>
+        <h2>Posturografía</h2>
+        <div class="modules">
+            <a class="module" href="imu.html">
+                <span class="tag">Sensor inercial</span>
+                <h3>Posturógrafo IMU</h3>
+                <p>Calibra el ángulo de un IMU (BNO055, MPU6050, …) contra una referencia geométrica. Ganancia, offset, acoplamiento entre ejes, histéresis, flexión de la barra y matriz de corrección 3D.</p>
+            </a>
+            <a class="module" href="balanza.html">
+                <span class="tag">Plataforma de fuerza</span>
+                <h3>Posturógrafo de balanza</h3>
+                <p>Plataforma con 4 celdas de carga y HX711. Obtiene el factor de cada celda con masas conocidas y valida la fuerza vertical y el centro de presión (CoP).</p>
+            </a>
+        </div>
+
+        <h2>Presión y caudal</h2>
+        <div class="modules">
+            <a class="module" href="presion.html">
+                <span class="tag">Manómetro de agua</span>
+                <h3>Sensor de presión</h3>
+                <p>Calibra un sensor de presión diferencial con tubo en U. Entrega la ecuación V → ΔP con su incertidumbre, lista para usar en los módulos de caudal.</p>
+            </a>
+            <a class="module" href="venturi.html">
+                <span class="tag">Caudal</span>
+                <h3>Medidor Venturi</h3>
+                <p>Valida un Venturi contra caudal de referencia (volumétrico o caudalímetro). Obtiene el coeficiente de descarga C<sub>d</sub> y su dependencia del Reynolds.</p>
+            </a>
+            <a class="module" href="pitot.html">
+                <span class="tag">Velocidad</span>
+                <h3>Tubo de Pitot</h3>
+                <p>Valida un Pitot contra un anemómetro o un caudal conocido. Obtiene el coeficiente C y la ecuación v = K·√ΔP.</p>
+            </a>
+        </div>
+
+        <h2>Antes de empezar</h2>
+        <div class="card">
+            <p><a href="fundamentos.html"><strong>Fundamentos de calibración →</strong></a> Qué es error, sesgo, repetibilidad, histéresis, incertidumbre y cómo decidir si un sensor “cumple”.
+                Léalo una vez: todos los módulos usan estos conceptos.</p>
+            <p class="muted small">Los datos quedan guardados en este navegador. Funciona sin internet: basta abrir <code>index.html</code>.
+                Para cambiar de computador use “Respaldo completo” en la pestaña Guardados de cualquier módulo.</p>
+        </div>
+    </main>
+
+    <footer class="foot">
+        Laboratorio de Calibración · Universidad Austral de Chile · Nicolás Biaer y Vanessa Uribe
+    </footer>
+</body>
+</html>

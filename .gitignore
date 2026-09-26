@@ -1,0 +1,4 @@
+# Credenciales de otro proyecto: no versionar
+legacy/admin_users.json
+node_modules/
+.DS_Store

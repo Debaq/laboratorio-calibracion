@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TecMedHub - Sistema de Calibración</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+            margin-bottom: 8px;
+        }
+
+        .header .institution {
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .about-link {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .about-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .intro h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .intro p {
+            color: #666;
+            font-size: 1.05em;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .system-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 35px 25px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            text-align: center;
+        }
+
+        .system-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .system-card.available:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .system-card.coming-soon {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .system-card.coming-soon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .system-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .system-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .system-card p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.7em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge.available {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge.coming-soon {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header .subtitle {
+                font-size: 1em;
+            }
+
+            .about-link {
+                position: static;
+                display: inline-block;
+                margin-top: 15px;
+            }
+
+            .systems-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="about.html" class="about-link">ℹ️ ¿Por qué calibrar?</a>
+            <h1>🔬 TecMedHub</h1>
+            <div class="subtitle">Sistema de Calibración y Validación de Sensores</div>
+            <div class="institution">Universidad Austral de Chile</div>
+        </div>
+
+        <div class="content">
+            <div class="intro">
+                <h2>Seleccione su Sistema de Medición</h2>
+                <p>
+                    Herramientas profesionales para caracterización, validación y ajuste de errores métricos 
+                    en sistemas de medición experimental.
+                </p>
+            </div>
+
+            <div class="systems-grid">
+                <!-- Sistema 1: Posturógrafo IMU -->
+                <div class="system-card available" onclick="window.location.href='posturografo-v3-completo.html'">
+                    <span class="badge available">Disponible</span>
+                    <span class="system-icon">🎯</span>
+                    <h3>Posturógrafo IMU</h3>
+                    <p>
+                        Calibración de sensores inerciales (IMU) para sistemas de medición postural y equilibrio. 
+                        Válido para BNO055, MPU6050 y sensores similares.
+                    </p>
+                    <a href="posturografo-v3-completo.html" class="btn">Iniciar Calibración</a>
+                </div>
+
+                <!-- Sistema 2: Sensores de Presión -->
+                <div class="system-card coming-soon">
+                    <span class="badge coming-soon">Próximamente</span>
+                    <span class="system-icon">💧</span>
+                    <h3>Sensores de Presión</h3>
+                    <p>
+                        Calibración de sensores de presión mediante columna de agua. 
+                        Para manómetros, transductores y sensores capacitivos.
+                    </p>
+                    <a href="#" class="btn disabled">En Desarrollo</a>
+                </div>
+
+                <!-- Sistema 3: Sensores de Flujo Venturi -->
+                <div class="system-card coming-soon">
+                    <span class="badge coming-soon">Próximamente</span>
+                    <span class="system-icon">🌊</span>
+                    <h3>Flujo Venturi/Bernoulli</h3>
+                    <p>
+                        Calibración de caudalímetros usando tubo Venturi y principio de Bernoulli. 
+                        Para medidores electromagnéticos y ultrasónicos.
+                    </p>
+                    <a href="#" class="btn disabled">En Desarrollo</a>
+                </div>
+
+                <!-- Sistema 4: Tubo de Pitot -->
+                <div class="system-card coming-soon">
+                    <span class="badge coming-soon">Próximamente</span>
+                    <span class="system-icon">✈️</span>
+                    <h3>Flujo con Tubo de Pitot</h3>
+                    <p>
+                        Calibración de sensores de velocidad de flujo para aplicaciones de aire y gases en ductos.
+                    </p>
+                    <a href="#" class="btn disabled">En Desarrollo</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                Desarrollado por <strong>Nicolás Biaer</strong> y <strong>Vanessa Uribe</strong><br>
+                <a href="about.html">Sobre el Proyecto</a> | 
+                <a href="https://www.uach.cl" target="_blank">Universidad Austral de Chile</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

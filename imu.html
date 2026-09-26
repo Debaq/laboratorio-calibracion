@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posturógrafo IMU</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Posturógrafo IMU</h1>
+        <p class="sub">Calibración angular de un sensor inercial montado en la barra del posturógrafo.</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados</button>
+        <button data-tab="multi"><span class="num">5</span>Multi-eje</button>
+        <button data-tab="guardados"><span class="num">6</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <!-- ================= GUÍA ================= -->
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> determinar cuánto se equivoca el IMU al medir la inclinación de la barra
+                (ganancia, offset, histéresis, repetibilidad), cuánto “se filtra” el movimiento a los otros ejes (acoplamiento o
+                <em>crosstalk</em>) y obtener la ecuación de corrección para el posturógrafo.</div>
+
+            <h2>Principio: la geometría es la referencia</h2>
+            <p>En vez de leer un transportador (resolución típica 1°), se usa una regla o pie de metro para medir el <strong>desplazamiento
+                horizontal d</strong> de un punto de la barra, a distancia <strong>L</strong> del pivote:</p>
+            <div class="math">θ_ref = asin(d / L)
+
+u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
+            <p>Con L = 1000 mm y una regla de 1 mm, u(θ) ≈ 0,02°. Es <strong>50 veces mejor que el transportador</strong>.
+                Mientras más larga sea L, mejor es la referencia. Para giros en <em>yaw</em> se usa la <strong>cuerda</strong>
+                c recorrida a un radio r: <code>θ = 2·asin(c / 2r)</code>, o un goniómetro/plato giratorio (método directo).</p>
+
+            <h3>El cero de cada ciclo</h3>
+            <p>El IMU nunca queda montado perfectamente alineado: en reposo puede marcar, por ejemplo, pitch = 1,2°. Por eso se registra un
+                <strong>cero</strong> al inicio y al final de cada ciclo, y se analiza el cambio <code>Δ = lectura − cero</code>. La diferencia entre el cero
+                final y el inicial es la <strong>deriva</strong>.</p>
+
+            <h3>Acoplamiento entre ejes</h3>
+            <p>Si se inclina solo en pitch, roll y yaw deberían quedarse quietos. Si cambian proporcionalmente, el sensor está girado respecto
+                de la barra. La pendiente <code>c = ΔRoll / θ_pitch</code> es el acoplamiento, y <code>atan(c)</code> es aproximadamente el ángulo de desalineación.</p>
+
+            <h3>Flexión de la barra (opcional)</h3>
+            <p>Con la barra vertical, el peso del sensor y del láser es axial: no la dobla. Al inclinarla un ángulo θ, la componente
+                <code>F⊥ = m·g·sin θ</code> la curva como un voladizo, y el IMU ve un ángulo algo mayor que el del pivote:</p>
+            <div class="math">φ(x) = F⊥ · x (2L − x) / (2 EI)     giro extra en la posición x del sensor
+δ(x) = F⊥ · x² (3L − x) / (6 EI)    desplazamiento lateral extra</div>
+            <p>La rigidez <code>EI</code> se mide una vez con un ensayo de 3 puntos (barra horizontal sobre dos apoyos, carga en el medio):
+                <code>δ = F·a²·b² / (3·EI·L<sub>s</sub>)</code>. Si la barra es rígida (metal, de más de 15 mm de diámetro) el efecto suele ser menor a 0,05° y se puede omitir.</p>
+
+            <h2>Materiales</h2>
+            <ul>
+                <li>Posturógrafo con la barra y el IMU montados, y un computador que muestre pitch, roll y yaw (monitor serie).</li>
+                <li>Regla metálica o pie de metro fijo a una base, perpendicular a la barra, a una altura conocida L.</li>
+                <li>Huincha para medir L (distancia pivote → punto de medición) con ±1 mm.</li>
+                <li>Topes o tacos para fijar posiciones repetibles (opcional, pero recomendable).</li>
+                <li>Para yaw: plato giratorio graduado o marca a radio conocido en el piso.</li>
+            </ul>
+
+            <h2>Procedimiento</h2>
+            <ol class="steps">
+                <li><strong>Estabilice.</strong> Encienda el IMU 15 min antes. En el BNO055 espere a que el estado de calibración interna
+                    (SYS, GYR, ACC, MAG) llegue a 3; anótelo en las notas.</li>
+                <li><strong>Mida la geometría.</strong> L desde el eje del pivote hasta la altura donde leerá d. Estime su incertidumbre (típico ±1 mm).</li>
+                <li><strong>Defina los niveles.</strong> Use valores de d que cubran el rango real de uso del posturógrafo, a ambos lados (+ y −).
+                    Mínimo 5 niveles distintos de cero.</li>
+                <li><strong>Complete la Preparación</strong> y presione <em>Generar plan y comenzar</em>.</li>
+                <li><strong>Siga el plan.</strong> Cada acción dice qué posición poner. Espere 3 s a que se detenga la oscilación, lea los tres ángulos
+                    y regístrelos. Llegue a cada nivel sin pasarse (si se pasó, vuelva a cero y repita).</li>
+                <li><strong>Revise los resultados</strong>, discuta las advertencias y guarde el experimento.</li>
+                <li><strong>Repita para los otros ejes</strong> (pitch, roll, yaw) y combine en <em>Multi-eje</em> para obtener la matriz de corrección 3D.</li>
+            </ol>
+
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> IMU encendido ≥ 15 min y con calibración interna completa</label>
+                <label class="check"><input type="checkbox" data-check> Sensor firmemente fijado (sin juego al empujarlo con el dedo)</label>
+                <label class="check"><input type="checkbox" data-check> L medida y anotada, con su incertidumbre</label>
+                <label class="check"><input type="checkbox" data-check> Regla perpendicular a la barra y fija a la base</label>
+                <label class="check"><input type="checkbox" data-check> Tolerancia de aceptación definida antes de medir</label>
+                <label class="check"><input type="checkbox" data-check> Sin metales ni imanes cerca (si evalúa yaw con magnetómetro)</label>
+            </div>
+
+            <h2>Errores comunes</h2>
+            <ul>
+                <li><strong>Usar el transportador como referencia</strong> para un sensor de ±1°: la referencia es tan mala como el sensor.</li>
+                <li><strong>No registrar el cero</strong>: el offset de montaje aparece como “error” o como “crosstalk” falso.</li>
+                <li><strong>Yaw absoluto</strong>: en modo NDOF el yaw es un rumbo magnético (0–360°). El sistema calcula el cambio relativo y corrige el salto 359° → 0°.</li>
+                <li><strong>Ángulos de Euler grandes</strong>: con inclinaciones mayores a ~30° en dos ejes a la vez, los ángulos de Euler se acoplan por definición (no es un defecto del sensor).</li>
+            </ul>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+        </section>
+
+        <!-- ================= PREPARACIÓN ================= -->
+        <section class="panel" id="tab-config" hidden>
+            <div class="card">
+                <h3>Experimento y sensor</h3>
+                <div class="grid two">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: Pitch ±15° — grupo 3 — 2026-09-25"></div>
+                    <div class="field"><label>Modelo del IMU</label><input type="text" data-bind="sensor.model"></div>
+                    <div class="field"><label>Fabricante</label><input type="text" data-bind="sensor.maker"></div>
+                    <div class="field"><label>Modo de fusión</label>
+                        <select data-bind="sensor.mode">
+                            <option value="NDOF">NDOF (acel + giro + magnetómetro)</option>
+                            <option value="IMU">IMU (acel + giro, sin magnetómetro)</option>
+                            <option value="otro">Otro / filtro propio</option>
+                        </select></div>
+                </div>
+                <div class="field" style="margin-top:12px"><label>Notas (estado de calibración interna, firmware, observaciones)</label><textarea rows="2" data-bind="sensor.notes"></textarea></div>
+            </div>
+
+            <div class="card">
+                <h3>Eje y referencia</h3>
+                <div class="grid three">
+                    <div class="field"><label>Eje a evaluar</label>
+                        <select data-bind="axis">
+                            <option value="pitch">Pitch (antero-posterior)</option>
+                            <option value="roll">Roll (medio-lateral)</option>
+                            <option value="yaw">Yaw (rotación vertical)</option>
+                        </select></div>
+                    <div class="field"><label>Método de referencia</label>
+                        <select data-bind="refMethod">
+                            <option value="seno">Seno: desplazamiento d a distancia L</option>
+                            <option value="cuerda">Cuerda: c a radio r (yaw)</option>
+                            <option value="directo">Directo: inclinómetro / goniómetro</option>
+                        </select></div>
+                    <div class="field"><label>Tolerancia de aceptación <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="tolerance_deg" data-type="number">
+                        <div class="help">Error máximo admisible para el uso previsto.</div></div>
+                    <div class="field" data-show-if="refMethod=seno"><label>L: pivote → punto de medición <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="L_mm" data-type="number"></div>
+                    <div class="field" data-show-if="refMethod=cuerda"><label>r: radio de la marca <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="r_mm" data-type="number"></div>
+                    <div class="field" data-show-if="refMethod=seno,cuerda"><label>Incertidumbre de L o r <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="uL_mm" data-type="number"></div>
+                    <div class="field"><label>Resolución de la referencia <small id="res-unit">(mm)</small></label><input type="text" inputmode="decimal" data-bind="resRef" data-type="number">
+                        <div class="help">División mínima de la regla / display.</div></div>
+                    <div class="field"><label>Resolución del IMU <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="resImu" data-type="number">
+                        <div class="help">BNO055 Euler: 0,0625° (1/16).</div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Plan de medición</h3>
+                <div class="grid three">
+                    <div class="field"><label>Niveles <small id="lv-unit">(mm)</small></label><input type="text" data-bind="levels" data-type="list">
+                        <div class="help">Separe con punto y coma. Incluya valores + y −. El cero se agrega solo.</div></div>
+                    <div class="field"><label>Ciclos completos</label><input type="text" inputmode="numeric" data-bind="cycles" data-type="number"></div>
+                    <div class="field"><label class="inline-check"><input type="checkbox" data-bind="bidirectional"> Subir y bajar (mide histéresis)</label></div>
+                </div>
+                <div id="levels-preview"></div>
+            </div>
+
+            <div class="card">
+                <h3>Flexión de la barra <small class="muted">(opcional, solo pitch/roll)</small></h3>
+                <label class="inline-check"><input type="checkbox" data-bind="flex.enabled"> Corregir la flexión de la barra</label>
+                <div data-show-if="flex.enabled=true">
+                    <div class="grid three" style="margin-top:12px">
+                        <div class="field"><label>Masa en la punta <small>(g)</small></label><input type="text" inputmode="decimal" data-bind="flex.tipMass_g" data-type="number">
+                            <div class="help">IMU + láser + soporte + cables.</div></div>
+                        <div class="field"><label>Largo pivote → masa <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="flex.barLength_mm" data-type="number"></div>
+                        <div class="field"><label>Pivote → IMU <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="flex.sensorPos_mm" data-type="number"></div>
+                        <div class="field"><label>Rigidez EI <small>(N·m²)</small></label><input type="text" inputmode="decimal" data-bind="flex.EI_Nm2" data-type="number">
+                            <div class="help">Del ensayo de abajo o de tabla: EI = E·π·(D⁴ − d⁴)/64.</div></div>
+                        <div class="field"><label class="inline-check"><input type="checkbox" data-bind="flex.dAtTip"> d se mide a la altura de la masa (la regla “ve” la curvatura)</label></div>
+                    </div>
+                    <details class="card">
+                        <summary>Ensayo de flexión en 3 puntos (obtener EI)</summary>
+                        <p class="muted small">Barra horizontal sobre dos apoyos separados L<sub>s</sub>. Cuelgue masas en la posición a y lea la altura del punto de carga
+                            (o un comparador). La primera fila debe ser masa = 0.</p>
+                        <div class="grid three">
+                            <div class="field"><label>L<sub>s</sub>: distancia entre apoyos <small>(mm)</small></label><input type="text" inputmode="decimal" id="fx-span"></div>
+                            <div class="field"><label>a: posición de la carga <small>(mm desde apoyo)</small></label><input type="text" inputmode="decimal" id="fx-pos"></div>
+                            <div class="field"><label class="inline-check"><input type="checkbox" id="fx-inc"> La lectura AUMENTA al cargar (comparador)</label></div>
+                        </div>
+                        <div class="grid three" style="margin-top:10px">
+                            <div class="field"><label>Masa <small>(g)</small></label><input type="text" inputmode="decimal" id="fx-m"></div>
+                            <div class="field"><label>Lectura <small>(mm)</small></label><input type="text" inputmode="decimal" id="fx-r"></div>
+                            <div class="field"><label>&nbsp;</label><button type="button" id="fx-add">Agregar carga</button></div>
+                        </div>
+                        <div id="fx-out"></div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Lugar y condiciones</h3>
+                <div class="grid three">
+                    <div class="field"><label>Latitud <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="env.lat" data-type="number"><div class="help">Valdivia: −39,81</div></div>
+                    <div class="field"><label>Altitud <small>(m)</small></label><input type="text" inputmode="decimal" data-bind="env.alt" data-type="number"></div>
+                    <div class="field"><label>Temperatura ambiente <small>(°C)</small></label><input type="text" inputmode="decimal" data-bind="env.temp" data-type="number"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+            </div>
+        </section>
+
+        <!-- ================= MEDICIÓN ================= -->
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+
+        <!-- ================= RESULTADOS ================= -->
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+
+        <!-- ================= MULTI-EJE ================= -->
+        <section class="panel" id="tab-multi" hidden>
+            <div class="callout">Combine experimentos <strong>guardados</strong> de distintos ejes para obtener la matriz de sensibilidad 3×3 y su inversa (la corrección).</div>
+            <div class="math">Δ = A · θ + a         (Δ: cambios leídos por el IMU;  θ: ángulos verdaderos)
+θ = C · (Δ − a),   C = A⁻¹
+
+A[i][j] = pendiente del eje i cuando se mueve SOLO el eje j
+diagonal → ganancias     fuera de la diagonal → acoplamientos</div>
+            <div class="card"><div class="grid three" id="multi-selects"></div>
+                <div class="actions"><button type="button" class="primary" id="multi-run">Calcular matriz</button></div></div>
+            <div id="multi-out"></div>
+        </section>
+
+        <!-- ================= GUARDADOS ================= -->
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/imu-model.js"></script>
+    <script src="js/modules/imu-ui.js"></script>
+</body>
+</html>

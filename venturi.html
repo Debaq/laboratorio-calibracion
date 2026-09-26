@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medidor Venturi</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body data-device="venturi">
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Medidor Venturi</h1>
+        <p class="sub">Validación de un caudalímetro Venturi: coeficiente de descarga C<sub>d</sub> frente a un caudal de referencia.</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados</button>
+        <button data-tab="guardados"><span class="num">5</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> determinar el coeficiente de descarga C<sub>d</sub> del Venturi y su incertidumbre, para convertir ΔP en caudal.
+                <br><strong>Requisito:</strong> tener calibrado el sensor de presión en el módulo <a href="presion.html">Sensor de presión</a>.</div>
+
+            <h2>Principio: Bernoulli + continuidad</h2>
+            <div class="math">   D (entrada, P₁)        d (garganta, P₂)
+  ════════╗                    ╔════════
+          ╚═══╗          ╔═════╝
+              ╚══════════╝
+     →  v₁                v₂ > v₁ ,  P₂ < P₁
+
+Continuidad:  Q = A₁ v₁ = A₂ v₂
+Bernoulli:    P₁ − P₂ = ½ ρ (v₂² − v₁²)
+
+Q_teórico = A₂ · √( 2ΔP / (ρ (1 − β⁴)) )      β = d/D,  A₂ = π d²/4
+C_d       = Q_real / Q_teórico                (&lt; 1 por fricción y perfil de velocidad)</div>
+            <ul>
+                <li><strong>ρ es la densidad del fluido que pasa por el Venturi.</strong> Con aire es ≈ 1,2 kg/m³ y se calcula con temperatura, presión y humedad.
+                    La densidad del agua solo interviene al calibrar el sensor de presión.</li>
+                <li>El Reynolds en la garganta, <code>Re = 4ρQ / (π d μ)</code>, indica el régimen. C<sub>d</sub> suele bajar a Reynolds bajos.</li>
+                <li>Con aire, si la velocidad en la garganta supera Mach 0,3 (~100 m/s) la hipótesis de flujo incompresible falla.</li>
+            </ul>
+
+            <h3>Incertidumbre de C<sub>d</sub></h3>
+            <div class="math">(u_Cd / Cd)² = (u_Q / Q)² + (½ · u_ΔP / ΔP)² + (½ · u_ρ / ρ)² + (2 · u_d / d)²</div>
+            <p>El diámetro de la garganta pesa el doble. Mídalo con pie de metro en 3 direcciones y promedie. A caudales bajos domina el término de ΔP.</p>
+
+            <h2>Referencia de caudal</h2>
+            <ul>
+                <li><strong>Volumétrico</strong>: medir el tiempo que tarda en llenarse (agua) o desplazarse (aire, con una bolsa o una probeta invertida en agua)
+                    un volumen conocido. Use tiempos ≥ 20 s para que el error de reacción del cronómetro (~0,2 s) sea menor al 1 %.</li>
+                <li><strong>Caudalímetro de referencia</strong> calibrado, en serie con el Venturi.</li>
+            </ul>
+
+            <h2>Procedimiento</h2>
+            <ol class="steps">
+                <li><strong>Mida la geometría</strong>: D y d con pie de metro. Verifique que haya un tramo recto antes del Venturi (≥ 5 D).</li>
+                <li><strong>Seleccione la calibración del sensor de presión</strong> en la Preparación. Si mide P₁ y P₂ con sensores separados, elija ambas.</li>
+                <li><strong>Registre temperatura, presión atmosférica y humedad</strong> (con aire).</li>
+                <li><strong>Siga el plan</strong>: para cada posición de la válvula espere régimen estable, registre la salida del sensor y la referencia. Repita.</li>
+                <li><strong>Revise C<sub>d</sub> vs Re</strong>: si es constante, informe un solo valor; si no, informe la curva.</li>
+            </ol>
+
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Sensor de presión calibrado en el rango de ΔP que se va a usar</label>
+                <label class="check"><input type="checkbox" data-check> D y d medidos con pie de metro (3 lecturas)</label>
+                <label class="check"><input type="checkbox" data-check> Tomas de presión sin agua ni obstrucciones</label>
+                <label class="check"><input type="checkbox" data-check> Sin fugas entre el Venturi y la referencia de caudal</label>
+                <label class="check"><input type="checkbox" data-check> Tramo recto aguas arriba</label>
+                <label class="check"><input type="checkbox" data-check> Condiciones ambientales anotadas</label>
+            </div>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+        </section>
+
+        <section class="panel" id="tab-config" hidden>
+            <div class="card">
+                <h3>Experimento</h3>
+                <div class="grid two">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: Venturi impreso 25/12 mm — aire"></div>
+                    <div class="field"><label>Notas</label><input type="text" data-bind="notes"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Calibración del sensor de presión</h3>
+                <div class="grid two">
+                    <div class="field"><label>Medición de presión</label>
+                        <select data-bind="pressureMode"><option value="diferencial">Un sensor diferencial (P₁ − P₂)</option><option value="dos">Dos sensores (P₁ y P₂ por separado)</option></select></div>
+                </div>
+                <div class="grid two" style="margin-top:12px">
+                    <div class="field"><label><span data-show-if="pressureMode=dos">Sensor P₁</span><span data-show-if="pressureMode=diferencial">Sensor ΔP</span></label>
+                        <select id="calA-sel"></select>
+                        <label class="button" style="margin-top:6px">o importar JSON<input type="file" id="calA-file" accept=".json" hidden></label>
+                        <div class="help" id="calA-info"></div></div>
+                    <div class="field" data-show-if="pressureMode=dos"><label>Sensor P₂</label>
+                        <select id="calB-sel"></select>
+                        <label class="button" style="margin-top:6px">o importar JSON<input type="file" id="calB-file" accept=".json" hidden></label>
+                        <div class="help" id="calB-info"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Geometría y fluido</h3>
+                <div class="grid three">
+                    <div class="field"><label>D: diámetro de entrada <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="D_mm" data-type="number"></div>
+                    <div class="field"><label>d: diámetro de garganta <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="d_mm" data-type="number"></div>
+                    <div class="field"><label>u(d) <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="uD_mm" data-type="number"></div>
+                    <div class="field"><label>Fluido</label><select data-bind="fluid"><option value="aire">Aire</option><option value="agua">Agua</option></select></div>
+                    <div class="field"><label>Temperatura del fluido <small>(°C)</small></label><input type="text" inputmode="decimal" data-bind="env.temp" data-type="number"></div>
+                    <div class="field" data-show-if="fluid=aire"><label>Presión atmosférica <small>(hPa)</small></label><input type="text" inputmode="decimal" data-bind="env.p_hPa" data-type="number"></div>
+                    <div class="field" data-show-if="fluid=aire"><label>Humedad relativa <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="env.rh" data-type="number"></div>
+                </div>
+                <p class="muted small" id="fluid-info"></p>
+            </div>
+
+            <div class="card">
+                <h3>Referencia y plan</h3>
+                <div class="grid three">
+                    <div class="field"><label>Referencia de caudal</label>
+                        <select data-bind="refMode"><option value="volumen">Volumétrica (volumen y tiempo)</option><option value="caudal">Caudalímetro de referencia</option></select></div>
+                    <div class="field" data-show-if="refMode=volumen"><label>u(volumen) <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="uVol_pct" data-type="number"></div>
+                    <div class="field" data-show-if="refMode=volumen"><label>u(tiempo) <small>(s)</small></label><input type="text" inputmode="decimal" data-bind="uTime_s" data-type="number"><div class="help">Reacción del cronómetro manual ≈ 0,2 s.</div></div>
+                    <div class="field" data-show-if="refMode=caudal"><label>u(caudalímetro) <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="uRef_pct" data-type="number"></div>
+                    <div class="field"><label>Posiciones de válvula</label><input type="text" data-bind="levels" data-type="list"><div class="help">Ej.: 1; 2; 3; 4; 5; 6</div></div>
+                    <div class="field"><label>Repeticiones por posición</label><input type="text" inputmode="numeric" data-bind="reps" data-type="number"></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/presion-model.js"></script>
+    <script src="js/modules/flujo-model.js"></script>
+    <script src="js/modules/flujo-ui.js"></script>
+</body>
+</html>

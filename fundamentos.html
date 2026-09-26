@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundamentos de Calibración</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Fundamentos de calibración</h1>
+        <p class="sub">Conceptos que usan todos los módulos. Basado en el VIM (JCGM 200) y la GUM (JCGM 100).</p>
+    </div></header>
+
+    <main>
+        <h2>¿Qué es calibrar?</h2>
+        <p>Calibrar es <strong>comparar</strong> las indicaciones de un instrumento con un <strong>patrón de referencia</strong> más exacto,
+            en condiciones controladas, para conocer su error y su incertidumbre. A veces se obtiene además una <strong>corrección</strong>
+            (una ecuación) para compensar el error. Calibrar no es “ajustar hasta que dé cero”: es medir cuánto se equivoca y con qué confianza lo sabemos.</p>
+
+        <div class="callout"><strong>Regla de oro:</strong> la referencia debe ser al menos 4 veces más exacta que la tolerancia que se quiere verificar
+            (<em>TUR ≥ 4:1</em>). Un transportador de 1° no sirve para verificar un IMU que debería medir con ±1°.</div>
+
+        <h2>Modelo de error</h2>
+        <p>Casi todos los sensores de este laboratorio se describen bien con una recta:</p>
+        <div class="math">lectura = a + b · valor_verdadero + ε
+
+a  → offset (error de cero)
+b  → ganancia (sensibilidad). Ideal: b = 1 si lectura y referencia están en la misma unidad
+ε  → error aleatorio (ruido, repetibilidad)</div>
+        <p>Si <code>b</code> y <code>a</code> se conocen, la <strong>corrección</strong> es <code>valor = (lectura − a) / b</code>.
+            El ajuste se hace por mínimos cuadrados y cada coeficiente trae su error estándar: si <code>|b − 1| &gt; 2·se(b)</code>
+            la ganancia es significativamente distinta de 1.</p>
+
+        <h2>Métricas que verá en los resultados</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Métrica</th><th>Cómo se calcula</th><th>Qué indica</th></tr></thead>
+            <tbody>
+                <tr><td>Sesgo (bias)</td><td>promedio de (lectura − referencia)</td><td>Error sistemático. Se puede corregir.</td></tr>
+                <tr><td>Repetibilidad</td><td>desviación estándar combinada de repeticiones en el mismo punto (n − 1)</td><td>Ruido. No se corrige; se reduce promediando.</td></tr>
+                <tr><td>Histéresis</td><td>diferencia entre llegar al punto subiendo y bajando</td><td>Fricción, holguras, memoria del material.</td></tr>
+                <tr><td>No linealidad</td><td>máximo residuo respecto a la recta ajustada</td><td>Cuánto se aparta el sensor de una recta.</td></tr>
+                <tr><td>RMSE</td><td>√ promedio(error²)</td><td>Error típico total (sesgo + ruido).</td></tr>
+                <tr><td>SEE</td><td>√(Σ residuo² / (n − p))</td><td>Error típico que queda después de corregir con la recta.</td></tr>
+                <tr><td>R²</td><td>1 − SS<sub>res</sub>/SS<sub>tot</sub></td><td>Poco útil en calibración: casi siempre es 0,99…; mire los residuos.</td></tr>
+            </tbody>
+        </table></div>
+
+        <h2>Incertidumbre (GUM, versión práctica)</h2>
+        <ol class="steps">
+            <li><strong>Tipo A</strong> — de las repeticiones: <code>u = s / √n</code>.</li>
+            <li><strong>Tipo B</strong> — de otra información. Resolución δ de una escala o display: <code>u = δ / √12</code>.
+                Especificación ±a del fabricante: <code>u = a / √3</code>. Certificado con U y k: <code>u = U / k</code>.</li>
+            <li><strong>Propagar</strong> cada entrada a la salida con su coeficiente de sensibilidad (derivada):
+                <div class="math">y = f(x₁, x₂, …)   →   u_c(y)² = Σ (∂f/∂xᵢ)² · u(xᵢ)²</div>
+                Ejemplo (IMU): θ = asin(d/L) → ∂θ/∂d = 1/(L·cos θ), ∂θ/∂L = −tan θ / L.</li>
+            <li><strong>Expandir</strong>: <code>U = k · u_c</code>, con <code>k = 2</code> (≈ 95 % de confianza).</li>
+            <li><strong>Declarar</strong>: “error máximo 0,32° ; U = 0,15° (k = 2)”.</li>
+        </ol>
+
+        <h2>¿Cumple o no cumple?</h2>
+        <p>Se compara con una <strong>tolerancia</strong> definida <em>antes</em> de medir (por el fabricante, la norma o el uso clínico).
+            Los módulos usan la regla conservadora:</p>
+        <div class="math">cumple  ⇔  |error máximo| + U_referencia ≤ tolerancia</div>
+
+        <h2>Buenas prácticas en el laboratorio</h2>
+        <ul>
+            <li>Encienda los equipos 15 minutos antes (deriva térmica).</li>
+            <li>Mida el <strong>cero</strong> al inicio y al final de cada ciclo: así se separa el offset de montaje y se detecta la deriva.</li>
+            <li>Llegue a cada punto <strong>siempre en el mismo sentido</strong> (subiendo o bajando); pasarse y volver introduce histéresis.</li>
+            <li>Haga al menos 3 ciclos completos. Tres repeticiones en un mismo punto no son lo mismo que tres ciclos.</li>
+            <li>Cubra <strong>todo el rango de uso</strong>. Una calibración no vale fuera del rango medido.</li>
+            <li>Registre lo que ve, no lo que espera. Si un dato parece raro, anótelo y comente; no lo borre sin motivo físico.</li>
+            <li>Registre condiciones: temperatura, fecha, equipo, quién midió.</li>
+        </ul>
+
+        <h2>Unidades y decimales</h2>
+        <p>Puede escribir números con coma o punto decimal (<code>12,5</code> o <code>12.5</code>). En las listas separe los valores con punto y coma: <code>50; 100; 150</code>.
+            Los CSV se exportan con separador <code>;</code> y coma decimal para abrirlos directo en Excel en español.</p>
+    </main>
+
+    <footer class="foot">Laboratorio de Calibración · Universidad Austral de Chile</footer>
+</body>
+</html>
