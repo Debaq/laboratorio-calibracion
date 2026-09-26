@@ -34,7 +34,6 @@ js/modules/
   *-model.js                matemática pura de cada módulo (testeable en Node)
   *-ui.js                   interfaz de cada módulo
 tests/                      pruebas con node:test (núcleo + recuperación de parámetros con datos sintéticos)
-legacy/                     versión anterior (referencia; se puede borrar)
 ```
 
 Principios: se guardan solo **datos crudos** (configuración + mediciones), los resultados se recalculan siempre; SI internamente; scripts clásicos (no módulos ES) para que funcione desde `file://`.
