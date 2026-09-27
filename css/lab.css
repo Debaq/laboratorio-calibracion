@@ -181,6 +181,16 @@ table.matrix td:first-child { text-align: left; font-family: var(--font); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 
 /* ---------- Inicio ---------- */
+/* ---------- Audio: carga, medidor de grabación, espectrograma ---------- */
+.dropzone { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; padding: 26px 16px; border: 2px dashed var(--border); border-radius: var(--radius); background: var(--surface-2); cursor: pointer; }
+.dropzone:hover, .dropzone.over { border-color: var(--accent); background: var(--accent-soft); }
+.meter { height: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin: 8px 0; }
+.meter > div { height: 100%; width: 0; background: var(--ok); transition: width .15s linear; }
+.meter > div.hot { background: var(--bad); }
+.plot.spec { margin-top: 12px; }
+.plot.spec canvas { display: block; width: 100%; height: auto; }
+.methods { background: var(--surface-2); border-radius: 8px; padding: 10px 14px; font-size: .92rem; }
+.methods p { margin: .4em 0; }
 .badge.info { background: var(--accent-soft); color: var(--accent); }
 .home-hero { background: var(--surface); border-bottom: 1px solid var(--border); }
 .home-in { max-width: 1100px; margin: 0 auto; padding: 40px 16px 26px; }

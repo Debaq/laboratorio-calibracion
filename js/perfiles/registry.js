@@ -28,6 +28,7 @@
         { id: 'luz', name: 'Luz' },
         { id: 'electricos', name: 'Electricidad' },
         { id: 'biomedicos', name: 'Biomédicos' },
+        { id: 'audio', name: 'Audio y estímulos' },
         { id: 'otros', name: 'Otros' }
     ];
 

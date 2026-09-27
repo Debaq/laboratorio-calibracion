@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estímulos auditivos</title>
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=71b6ff44">
+</head>
+<body data-device="audio">
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>Estímulos auditivos</h1>
+        <p class="sub">Tiempos, rampas, frecuencia, espectrograma y nivel de los estímulos de una pista de audio (tonos, tone bursts, ruido con gaps, clicks).</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="audio"><span class="num">2</span>Audio</button>
+        <button data-tab="resultados"><span class="num">3</span>Resultados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> verificar y documentar los estímulos de una prueba auditiva (p. ej. procesamiento auditivo
+                central temporal: patrones de frecuencia y de duración, <em>gaps in noise</em>, detección de intervalos) midiendo lo que realmente
+                sale del computador: duración, rampas, intervalos, frecuencia y nivel, con los datos listos para la sección de métodos de una publicación.</div>
+
+            <h2>Qué se puede medir y dónde</h2>
+            <div class="diagram">  archivo de la prueba ──► reproductor + tarjeta de sonido ──► cable ──► otro PC (grabación)
+        (1) diseño                 (2) salida eléctrica                   ──► audífono + acoplador (3) acústico</div>
+            <ol>
+                <li><strong>Archivo original</strong>: cargue el WAV de la prueba. Muestra lo que se diseñó, sin ruido ni distorsión de la cadena.</li>
+                <li><strong>Salida eléctrica</strong>: grabe por cable (como ahora) o desde el mismo PC. Muestra lo que entrega el reproductor:
+                    recortes, remuestreo, volumen, “mejoras” de audio del sistema y retardos.</li>
+                <li><strong>Acústico</strong>: micrófono en un acoplador u oído artificial. Es la única forma de hablar de dB SPL o dB HL.</li>
+            </ol>
+            <p>Los <strong>tiempos</strong> (duración, rampas, intervalos) casi no cambian entre (1) y (2) si la cadena es buena: justamente por eso
+                conviene medir (2) y compararlo con (1). El <strong>nivel</strong> en un archivo solo existe en dBFS (relativo a la escala digital).</p>
+
+            <h2>Envolvente e instantes</h2>
+            <p>La envolvente es el módulo de la señal analítica (transformada de Hilbert). En un tono con rampa es exactamente la rampa:</p>
+            <div class="math">\[ e(t) = \bigl|\,x(t) + j\,\mathcal{H}\{x\}(t)\,\bigr| \qquad A = \text{amplitud de la meseta} \]</div>
+            <ul>
+                <li>Los instantes se toman donde \(e(t)\) cruza el <strong>10, 50 y 90 %</strong> de \(A\), interpolando entre muestras (resolución mucho menor que \(1/f_s\)).</li>
+                <li><strong>Duración al 50 %</strong> (de inicio a fin al 50 %): la definición más robusta, la habitual en psicoacústica.
+                    <strong>Duración nominal</strong>: del inicio de la rampa de subida (0 %) al final de la de bajada, que es como suele especificarse
+                    (“tonos de 150 ms con rampas de 10 ms”).</li>
+                <li><strong>Subida y bajada</strong>: tiempo entre el 10 y el 90 %. <strong>Intervalo</strong> (ISI): del fin al 50 % de un estímulo al inicio al 50 %
+                    del siguiente; también se informa el silencio entre los cruces del 10 % y la asincronía de inicio (SOA).</li>
+            </ul>
+            <h3>Forma y duración nominal de la rampa</h3>
+            <p>Los cruces del 10 al 90 % se ajustan a \(t_p = t_0 + T\,g(p)\) para tres formas; se elige la de menor residuo (menos de 3 % de \(T\)):</p>
+            <div class="math">\[ \text{lineal: } g(p) = p \qquad \text{coseno: } g(p) = \tfrac{2}{\pi}\arcsin p \qquad \text{coseno}^2\text{ (Hann): } g(p) = \tfrac{2}{\pi}\arcsin\sqrt{p} \]
+                <p>Subida 10–90 % = 0,80 T (lineal), 0,65 T (coseno), 0,59 T (coseno²). \(T\) es la duración nominal de la rampa y \(t_0\) su comienzo.</p></div>
+
+            <h2>Frecuencia, espectro y nivel</h2>
+            <ul>
+                <li><strong>Frecuencia</strong>: FFT de la meseta con ventana de Hann, relleno de ceros ×8 e interpolación parabólica del pico (error ≪ 0,1 Hz en tonos de más de 50 ms).
+                    Se informa también la <strong>THD</strong> (armónicos 2 a 10) y la <strong>tonalidad</strong> (fracción de la energía en el pico); con ella el estímulo se clasifica
+                    como tono, ruido, complejo o click (menos de 2 ms).</li>
+                <li><strong>Espectrograma</strong>: STFT con ventana de Hann. Ventanas cortas (2–5 ms) muestran bien los instantes; largas (20–80 ms) separan frecuencias cercanas.</li>
+                <li><strong>Nivel</strong>: RMS de la meseta en dBFS, con la convención AES17 (una sinusoide de escala completa = 0 dBFS). También pico y factor de cresta.</li>
+            </ul>
+            <div class="math">\[ L_\text{dBFS} = 20\log_{10}\!\left(\sqrt{2}\;x_\text{RMS}\right) \qquad L_\text{dB SPL} = L_\text{dBFS} + C \]
+                <p>\(C\) se obtiene grabando con el mismo micrófono y la misma ganancia un calibrador acústico (p. ej. 94 dB SPL a 1 kHz) o un tono de nivel conocido:
+                en Resultados, abra ese estímulo e ingrese su nivel.</p></div>
+
+            <h2>Grabar desde el mismo computador</h2>
+            <p>La pestaña <strong>Audio</strong> graba cualquier entrada del sistema sin procesamiento (sin cancelación de eco, supresión de ruido ni control de ganancia).
+                Para grabar lo que suena en el propio PC hay que elegir como entrada el “monitor” de la salida:</p>
+            <ul>
+                <li><strong>Linux</strong> (PipeWire/PulseAudio): elija <em>Monitor of …</em> en la lista. Si no aparece, grabe y, mientras graba, en <code>pavucontrol</code> → Grabación
+                    cambie la fuente del navegador a <em>Monitor of …</em>.</li>
+                <li><strong>Windows</strong>: active <em>Mezcla estéreo</em> (Configuración de sonido → Grabar) o instale un cable virtual (VB-Audio Cable).</li>
+                <li><strong>macOS</strong>: instale BlackHole y cree un dispositivo de salida múltiple (parlantes + BlackHole).</li>
+            </ul>
+            <div class="callout warn">La grabación “interna” es digital: no incluye el conversor ni el amplificador de audífonos. Muestra el efecto del reproductor y del mezclador
+                del sistema (volumen, remuestreo, mejoras), pero no el de la tarjeta. El <strong>cable</strong> sí mide la salida real: para publicar, sirve más.</div>
+
+            <h2>Recomendaciones para publicar</h2>
+            <ol class="steps">
+                <li><strong>Use WAV</strong> (PCM 16/24 bits o flotante). MP3/AAC agregan silencio al inicio (retardo del códec), filtran y cambian las rampas.</li>
+                <li><strong>Iguale la frecuencia de muestreo</strong> del archivo, del reproductor y del sistema (44,1 o 48 kHz) para evitar remuestreo.</li>
+                <li><strong>Desactive las mejoras de audio</strong> (ecualizador, “sonido espacial”, normalización) y fije el volumen del sistema y del reproductor.</li>
+                <li><strong>Deje margen</strong>: el pico de la grabación debe quedar bajo −1 dBFS (sin recorte) y el ruido de fondo al menos 40 dB bajo el estímulo.</li>
+                <li><strong>Grabe la pista completa</strong> y compare con el archivo original: la diferencia de duraciones e intervalos debe ser menor que 1 muestra.</li>
+                <li><strong>Informe</strong> media ± DE, n y la definición usada (instantes al 50 % de la envolvente). El botón <em>Texto para métodos</em> redacta el párrafo.</li>
+            </ol>
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Archivo original en WAV y su frecuencia de muestreo anotada</label>
+                <label class="check"><input type="checkbox" data-check> Mejoras de audio del sistema desactivadas; volumen fijo y anotado</label>
+                <label class="check"><input type="checkbox" data-check> Grabación sin recorte (pico &lt; −1 dBFS)</label>
+                <label class="check"><input type="checkbox" data-check> Canal correcto (izquierdo/derecho) en pruebas monoaurales o dicóticas</label>
+                <label class="check"><input type="checkbox" data-check> Calibración de nivel registrada, si se informarán dB SPL/HL</label>
+            </div>
+            <div class="actions"><button type="button" class="primary" data-goto="audio">Ir a Audio →</button>
+                <button type="button" data-action="example">Ver un ejemplo con una pista simulada</button></div>
+        </section>
+
+        <section class="panel" id="tab-audio" hidden>
+            <div class="card">
+                <h3>Cargar un archivo</h3>
+                <label class="dropzone" id="drop">
+                    <input type="file" id="file" accept=".wav,audio/*" hidden>
+                    <strong>Arrastre aquí un archivo de audio</strong> o haga clic para elegirlo
+                    <span class="muted small">WAV (recomendado) · MP3, OGG, FLAC y otros se decodifican con el navegador y se remuestrean</span>
+                </label>
+            </div>
+
+            <div class="card">
+                <h3>Grabar desde este computador</h3>
+                <div class="grid three">
+                    <div class="field"><label for="rec-dev">Entrada</label><select id="rec-dev"><option value="">Predeterminada del sistema</option></select>
+                        <div class="help">Lo que suena en este PC: <em>Monitor of …</em> (Linux), <em>Mezcla estéreo</em> (Windows), BlackHole (macOS). Ver la Guía.</div></div>
+                    <div class="field"><label>Frecuencia de muestreo <small>(Hz)</small></label>
+                        <select data-cfg="recRate" data-type="number"><option value="44100">44 100</option><option value="48000">48 000</option><option value="96000">96 000</option></select>
+                        <div class="help">Igual a la del archivo que se reproduce.</div></div>
+                    <div class="field"><label>Canales</label>
+                        <select data-cfg="recCh" data-type="number"><option value="1">1 (mono)</option><option value="2">2 (estéreo)</option></select></div>
+                </div>
+                <div class="actions">
+                    <button type="button" class="primary rec" id="rec-start">● Grabar</button>
+                    <button type="button" id="rec-stop" disabled>■ Detener y analizar</button>
+                    <button type="button" id="rec-refresh">Actualizar lista de entradas</button>
+                </div>
+                <div class="meter" aria-hidden="true"><div id="rec-meter"></div></div>
+                <p class="muted small" id="rec-status">El navegador pedirá permiso para usar la entrada de audio. Chrome, Edge o Firefox.</p>
+            </div>
+
+            <div class="card" id="src-card" hidden>
+                <h3>Audio actual</h3>
+                <div id="src-info"></div>
+                <div class="actions"><button type="button" id="btn-wav">Descargar WAV</button></div>
+            </div>
+
+            <div class="card">
+                <h3>Detección y medición</h3>
+                <div class="grid three">
+                    <div class="field"><label for="cfg-channel">Canal</label><select id="cfg-channel" data-cfg="channel" data-type="number"><option value="0">1</option></select></div>
+                    <div class="field"><label>Umbral de detección <small>(dB bajo el pico)</small></label><input type="text" inputmode="decimal" data-cfg="thresholdDb" data-type="number">
+                        <div class="help">30 dB detecta estímulos de nivel parecido. Súbalo si hay estímulos mucho más débiles; debe quedar sobre el ruido de fondo.</div></div>
+                    <div class="field"><label>Fusionar silencios menores que <small>(ms)</small></label><input type="text" inputmode="decimal" data-cfg="minGapMs" data-type="number">
+                        <div class="help">Evita cortar el ruido en sus valles. Debe ser menor que el gap más corto que quiera medir.</div></div>
+                    <div class="field"><label>Descartar estímulos menores que <small>(ms)</small></label><input type="text" inputmode="decimal" data-cfg="minDurMs" data-type="number">
+                        <div class="help">0 = ninguno. Un click dura ≈ 0,1 ms.</div></div>
+                    <div class="field"><label>Suavizado de la envolvente <small>(Hz)</small></label><input type="text" inputmode="decimal" data-cfg="smoothHz" data-type="number">
+                        <div class="help">0 = sin suavizar (recomendado en tonos). Fase cero: no desplaza los instantes, pero alarga las rampas cortas.</div></div>
+                    <div class="field"><label>Suavizado en ruido <small>(Hz)</small></label><input type="text" inputmode="decimal" data-cfg="noiseSmoothHz" data-type="number">
+                        <div class="help">Solo para medir los estímulos clasificados como ruido.</div></div>
+                    <div class="field"><label>Pausa que separa ítems <small>(ms)</small></label><input type="text" inputmode="decimal" data-cfg="seqGapMs" data-type="number" placeholder="automática">
+                        <div class="help">Vacío = automática (el mayor salto entre intervalos). Agrupa los estímulos de cada ítem para leer el patrón.</div></div>
+                    <div class="field"><label>Corrección de nivel C <small>(dB)</small></label><input type="text" inputmode="decimal" data-cfg="calOffset" data-type="number" placeholder="sin calibrar">
+                        <div class="help">Nivel calibrado = dBFS + C. Vacío = solo dBFS.</div></div>
+                    <div class="field"><label>Unidad del nivel calibrado</label><input type="text" data-cfg="calUnit"></div>
+                </div>
+                <div class="actions">
+                    <button type="button" class="primary" id="btn-analyze">Analizar →</button>
+                    <button type="button" id="btn-defaults">Valores por defecto</button>
+                    <button type="button" data-action="example">Cargar pista de ejemplo</button>
+                </div>
+                <p class="muted small">El audio no se guarda en el navegador (es muy pesado): al recargar la página hay que volver a cargarlo. Los ajustes sí se guardan.</p>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print">
+                <button type="button" data-action="print">Informe (PDF)</button>
+                <button type="button" data-export="estimulos">Estímulos (CSV)</button>
+                <button type="button" data-export="intervalos">Intervalos (CSV)</button>
+                <button type="button" data-export="clases">Clases (CSV)</button>
+                <button type="button" data-export="json">Todo (JSON)</button>
+            </div>
+            <div id="results"></div>
+        </section>
+    </main>
+
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/modules/audio-model.js?v=3de50b28"></script>
+    <script src="js/modules/audio-ui.js?v=ae8f8d80"></script>
+</body>
+</html>

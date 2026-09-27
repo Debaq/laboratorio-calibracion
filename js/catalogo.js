@@ -50,6 +50,13 @@
             summary: 'Coeficiente del Pitot y ecuación de velocidad v = K·√ΔP.',
             needs: 'sensor de presión calibrado y anemómetro de referencia',
             keywords: 'pitot velocidad aire viento tunel flujo'
+        },
+        {
+            id: 'audio', storeId: 'audio', href: 'audio.html', family: 'audio',
+            name: 'Estímulos auditivos (tiempos, rampas, espectro)', examples: 'tonos puros, tone bursts, ruido con gaps (GIN), patrones de frecuencia y duración, clicks',
+            summary: 'Duración, rampas, intervalos, frecuencia, espectrograma y nivel (dBFS o dB SPL) de los estímulos de una pista de audio, con texto para métodos.',
+            needs: 'el archivo WAV de la prueba o una grabación de la salida (cable o monitor del sistema)',
+            keywords: 'audio sonido tono estimulo audiometria procesamiento auditivo central temporal espectrograma espectro decibeles db dbfs spl rampa gap gin rgdt patrones frecuencia duracion isi wav grabar'
         }
     ];
 

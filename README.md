@@ -55,6 +55,12 @@ git clone https://github.com/Debaq/laboratorio-calibracion.git
 | [**Medidor Venturi**](venturi.html) | Coeficiente de descarga | Q = C_d·A₂·√(2ΔP/(ρ(1−β⁴))), C_d vs Reynolds (regresión ponderada), Mach |
 | [**Tubo de Pitot**](pitot.html) | Coeficiente del Pitot | v = C·√(2ΔP/ρ), factor de perfil de velocidad |
 
+### Audio y estímulos
+
+| Módulo | Qué mide | Cómo |
+|---|---|---|
+| [**Estímulos auditivos**](audio.html) | Tonos, tone bursts, ruido con gaps (GIN), patrones de frecuencia y duración, clicks | Carga de WAV (PCM 8–32 bits, flotante, RF64) o grabación desde el sistema (monitor/loopback, sin procesamiento). Envolvente de Hilbert; instantes al 10/50/90 % interpolados; subida y bajada; forma y duración nominal de la rampa (lineal, coseno, coseno²); ISI, SOA y gaps; frecuencia por FFT con interpolación, THD, banda; nivel RMS/pico en dBFS (AES17) o calibrado (dB SPL); clases, ítems y patrones (G/A, C/L); asincronía entre canales; espectrograma; CSV/JSON y texto para métodos en español e inglés |
+
 ### Catálogo de sensores
 
 Un **motor genérico** más un **perfil por sensor** (`sensor.html?p=<id>`). Cada perfil define la referencia recomendada, el plan, el modelo de curva y la guía.
@@ -134,7 +140,7 @@ Las fórmulas se escriben en LaTeX y se muestran con [KaTeX](https://katex.org) 
 
 ```
 index.html  fundamentos.html  imu.html  imu-crudo.html  balanza.html
-presion.html  venturi.html  pitot.html  sensor.html (catálogo: ?p=<id>)
+presion.html  venturi.html  pitot.html  audio.html  sensor.html (catálogo: ?p=<id>)
 css/lab.css                      estilos (claro/oscuro, impresión, protocolo PDF)
 js/core/
   linalg.js                      mínimos cuadrados QR, inversa, autovalores (Jacobi)
