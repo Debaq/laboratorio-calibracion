@@ -2,8 +2,10 @@
   "name": "laboratorio-calibracion",
   "version": "2.0.0",
   "private": true,
-  "description": "Guías y herramientas para calibrar posturógrafos (IMU y plataforma de fuerza) y sensores de presión y caudal",
+  "description": "Guías y herramientas web para calibrar sensores de placas de desarrollo: posturógrafos (IMU y plataforma de fuerza), presión, caudal y un catálogo de 26 sensores",
   "scripts": {
     "test": "node --test tests/*.test.js"
-  }
+  },
+  "author": "Nicolás Baier Quezada",
+  "license": "MIT"
 }

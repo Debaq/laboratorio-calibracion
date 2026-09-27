@@ -1,67 +1,171 @@
 # Laboratorio de Calibración
 
-Guías y herramientas web para que estudiantes calibren los sensores de un posturógrafo (IMU y plataforma de fuerza) y de sistemas de presión y caudal (Venturi, Pitot). Cada módulo explica el principio físico, genera un **plan de mediciones paso a paso**, calcula error, repetibilidad, histéresis e **incertidumbre (GUM)** y decide si el sensor cumple una tolerancia.
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+![Sin dependencias](https://img.shields.io/badge/dependencias-ninguna-brightgreen.svg)
+![Funciona sin internet](https://img.shields.io/badge/funciona-sin%20internet-brightgreen.svg)
 
-Cada módulo genera además un **protocolo de ensayo en PDF** (botón “Descargar protocolo”): datos del grupo, configuración, instrucciones y hoja de registro con el plan paso a paso para anotar a mano en el laboratorio.
+Guías y herramientas web para que estudiantes **calibren los sensores que se usan con placas de desarrollo** (Arduino, ESP32, Raspberry Pi Pico…):
+posturógrafos con IMU y plataforma de fuerza, presión diferencial, caudal (Venturi, Pitot) y un **catálogo de 26 sensores**: temperatura,
+humedad, distancia, fuerza, eléctricos, luz, ángulo, pH, suelo, caudal de líquidos y biomédicos.
 
-Funciona sin servidor ni internet: abrir `index.html` con doble clic. Los datos se guardan en el navegador (localStorage), con exportación JSON/CSV y respaldo completo.
+Cada módulo:
+
+1. **Explica** el principio físico, los materiales, el procedimiento y los errores comunes.
+2. **Genera el plan de mediciones** y guía paso a paso: *“Ciclo 2 ↑: lleve el baño a ≈ 40 °C, espere el equilibrio y registre”*.
+3. **Calcula** error, sesgo, repetibilidad, histéresis, no linealidad e **incertidumbre (GUM, k = 2)**, y decide si el sensor **cumple** una tolerancia.
+4. **Entrega** la ecuación de corrección con su código C/Arduino, y un **protocolo de ensayo en PDF** con la hoja de registro para el laboratorio.
+
+<p align="center"><img src="docs/img/inicio.png" width="820" alt="Página de inicio con los módulos y el catálogo de sensores"></p>
+
+## Uso
+
+No requiere instalación, servidor ni conexión a internet:
+
+```bash
+git clone https://github.com/Debaq/laboratorio-calibracion.git
+# abrir laboratorio-calibracion/index.html con doble clic en el navegador
+```
+
+- Los datos se guardan en el navegador (`localStorage`). Para cambiar de computador o entregar un trabajo use **JSON**, **CSV** (separador `;`,
+  coma decimal, listo para Excel en español) o **Respaldo completo** en la pestaña *Guardados*.
+- Cualquier módulo se puede ver con datos simulados agregando `?ejemplo` a la dirección (p. ej. `imu.html?ejemplo`). Sirve para mostrarlo en clase.
+- Se aceptan números con coma o punto decimal; las listas se separan con punto y coma (`0; 20; 40`).
 
 ## Módulos
 
-**Módulos especializados**
+### Posturografía
 
-| Página | Qué calibra | Modelo |
+| Módulo | Qué calibra | Cómo |
 |---|---|---|
-| `imu.html` | Ángulo de una IMU 3/6/9 DOF o inclinómetro en la barra del posturógrafo | θ_ref = asin(d/L) con propagación de incertidumbre; Δ = lectura − cero; Δ = a + b·θ; crosstalk como pendiente; flexión de voladizo; matriz 3×3 A y su inversa |
-| `imu-crudo.html` | Acelerómetro, giroscopio y magnetómetro crudos | Acelerómetro: 6 posiciones → S (escala + desalineación) y b; giroscopio: sesgo, desviación de Allan (ARW, inestabilidad), escala por giro conocido; magnetómetro: ajuste de elipsoide (hierro duro y blando) |
-| `balanza.html` | Plataforma de 4 celdas + HX711, en 3 ensayos | **Estático**: k_i por equilibrio de fuerzas y momentos; CoP; fluencia. **Ruido de fondo** (CSV): métricas de estabilometría de una carga inmóvil. **Dinámico** (CSV): masa giratoria, R(ω) = (m·r/M)(1 + ω²h/g) |
-| `presion.html` | Sensor ΔP con manómetro en U | ΔP = (ρ_agua(T) − ρ_aire)·g(φ,h)·Δh; ajuste V→ΔP con prueba F |
-| `venturi.html` / `pitot.html` | Coeficiente de descarga / de Pitot | Q = C_d·A₂·√(2ΔP/(ρ(1−β⁴))); v = C·√(2ΔP/ρ) |
+| [**Posturógrafo IMU**](imu.html) | Ángulo de una IMU de 3, 6 o 9 DOF o de un inclinómetro montado en la barra | Referencia geométrica θ = asin(d/L) (≈ 50× mejor que un transportador), cero por ciclo, ganancia y offset, acoplamiento entre ejes, histéresis, flexión de la barra (voladizo), matriz de corrección 3×3 |
+| [**IMU: sensores crudos**](imu-crudo.html) | Acelerómetro, giroscopio y magnetómetro | Acelerómetro por 6 posiciones (escala, sesgo, desalineación); giroscopio en reposo (sesgo, desviación de Allan: ARW e inestabilidad) y giro de ángulo conocido (escala); magnetómetro por ajuste de elipsoide (hierro duro y blando) |
+| [**Posturógrafo de balanza**](balanza.html) | Plataforma de 4 celdas de carga + HX711 | **Estático**: factor de cada celda por equilibrio de fuerzas y momentos, CoP, linealidad, histéresis, fluencia. **Ruido de fondo**: métricas de estabilometría de una carga inmóvil (piso del instrumento). **Dinámico**: fantoma de masa giratoria, respuesta en amplitud de 0,1 a 2 Hz |
 
-**Catálogo de sensores** (`sensor.html?p=<id>`): un motor genérico + un perfil por sensor. 26 perfiles en 12 familias:
-temperatura (NTC, LM35/TMP36, DS18B20, termocupla, PT100, ambientales), humedad (sales saturadas de Greenspan), presión barométrica,
-distancia (HC-SR04 con corrección de la velocidad del sonido, ToF, Sharp IR), fuerza (celda + HX711, FSR), eléctricos (ADC, ACS712, INA219),
-luz (LDR, BH1750), ángulo (potenciómetro, flex), pH (eficiencia de Nernst), humedad de suelo (gravimétrico), caudal (turbina),
-biomédicos (SpO₂ y FC por Bland–Altman) y un sensor genérico de unidades libres.
+<p align="center"><img src="docs/img/balanza-dinamico.png" width="820" alt="Ensayo dinámico de la plataforma: respuesta en amplitud y trayectoria del CoP"></p>
 
-El motor ofrece: modelos lineal, polinomios, logarítmico, potencia, inverso, Beta y Steinhart–Hart, comparados por AICc;
-incertidumbre de predicción; histéresis y repetibilidad; error sin corregir para sensores que ya entregan la magnitud;
-modo comparación (Bland–Altman, ARMS, sesgo proporcional); tiempo de respuesta τ desde un escalón (CSV), calculado sobre el
-valor calibrado; código C/Arduino de la ecuación. **Agregar un sensor = agregar un perfil** en `js/perfiles/`.
+### Presión y caudal
 
-`fundamentos.html` explica los conceptos comunes (error, sesgo, repetibilidad, histéresis, GUM, TUR, conformidad).
+| Módulo | Qué calibra | Cómo |
+|---|---|---|
+| [**Sensor de presión**](presion.html) | Sensor ΔP (MPX5010DP, MPXV7002…) | Manómetro en U: ΔP = (ρ_agua(T) − ρ_aire)·g(φ,h)·Δh; ecuación V → ΔP con prueba F e incertidumbre de predicción |
+| [**Medidor Venturi**](venturi.html) | Coeficiente de descarga | Q = C_d·A₂·√(2ΔP/(ρ(1−β⁴))), C_d vs Reynolds (regresión ponderada), Mach |
+| [**Tubo de Pitot**](pitot.html) | Coeficiente del Pitot | v = C·√(2ΔP/ρ), factor de perfil de velocidad |
+
+### Catálogo de sensores
+
+Un **motor genérico** más un **perfil por sensor** (`sensor.html?p=<id>`). Cada perfil define la referencia recomendada, el plan, el modelo de curva y la guía.
+
+| Familia | Sensores | Referencia / particularidad |
+|---|---|---|
+| Temperatura | NTC, LM35/TMP36, DS18B20, termocupla K (MAX31855/6675), PT100/PT1000 (MAX31865), DHT22/SHT31/BME280 | Punto de hielo, ebullición corregida por presión, baño con termómetro patrón; Steinhart–Hart; α de la PT100; constante de tiempo τ |
+| Humedad y ambiente | DHT22, SHT31, BME280, AHT20; BMP280/BME280 barométrico | Soluciones salinas saturadas (Greenspan, 1977); presión de estación desde QNH |
+| Distancia | HC-SR04, VL53L0X/L1X, Sharp GP2Y0A21 | Corrección de la velocidad del sonido por temperatura; modelo inverso |
+| Fuerza y peso | Celda de carga + HX711, FSR | Masas conocidas; ley de potencia; histéresis y fluencia |
+| Eléctricos | ADC de la placa (UNO, ESP32), ACS712, INA219/INA226 | Multímetro de referencia; no linealidad del ADC del ESP32 |
+| Luz | LDR, BH1750/TSL2561/VEML7700 | Luxómetro; ley de potencia |
+| Ángulo | Potenciómetro/encoder, sensor de flexión | Goniómetro |
+| Química | Electrodo de pH | Buffers 4/7/10; eficiencia de Nernst y offset |
+| Suelo | Humedad capacitiva | Método gravimétrico (secado en horno) |
+| Caudal | YF-S201 y similares | Volumétrico; factor K y su dependencia del caudal |
+| Biomédicos | SpO₂ y frecuencia cardiaca (MAX30102) | Comparación con equipo comercial: Bland–Altman, ARMS |
+| Otros | **Sensor genérico** | Magnitud y unidades libres, para cualquier sensor que no esté en la lista |
+
+El motor ofrece:
+
+- **Modelos** lineal, proporcional, polinomios de grado 2 y 3, logarítmico, potencia, inverso, Beta y Steinhart–Hart, ajustados por mínimos cuadrados y **comparados por AICc**.
+- **Modo calibración**: repetibilidad, histéresis, incertidumbre de predicción, error sin corregir, conformidad y rango válido de la ecuación.
+- **Modo comparación** (Bland–Altman): sesgo con su IC, límites de acuerdo del 95 %, sesgo proporcional, ARMS y conformidad tras corregir el offset.
+- **Tiempo de respuesta** τ y t₉₀ a partir de un escalón (CSV), calculado sobre el valor calibrado.
+
+<p align="center"><img src="docs/img/sensor-ntc.png" width="820" alt="Calibración de un termistor NTC con Steinhart–Hart y comparación de modelos"></p>
+
+### Protocolo de ensayo en PDF
+
+Todos los módulos tienen **Descargar protocolo (PDF)**: datos del grupo, configuración, instrucciones completas y **hoja de registro** con cada acción del plan
+y columnas en blanco para anotar a mano. Se genera con el diálogo de impresión del navegador (*Guardar como PDF*), así que funciona sin internet.
+
+<p align="center"><img src="docs/img/protocolo-pdf.png" width="380" alt="Primera página de un protocolo de ensayo"></p>
+
+## Fundamentos
+
+La página [Fundamentos de calibración](fundamentos.html) resume los conceptos que usan todos los módulos (VIM y GUM):
+
+```
+Modelo de error:          lectura = a + b · valor_verdadero + ε
+Incertidumbre tipo B:     resolución δ → u = δ/√12      tolerancia ±a → u = a/√3
+Propagación:              u_c(y)² = Σ (∂f/∂xᵢ)² · u(xᵢ)²
+Expandida:                U = k · u_c   (k = 2, ≈ 95 %)
+Conformidad:              |error máximo| + U_referencia ≤ tolerancia
+Referencia adecuada:      TUR = tolerancia / U_referencia ≥ 4
+```
 
 ## Estructura
 
 ```
-index.html, fundamentos.html, imu.html, balanza.html, presion.html, venturi.html, pitot.html
-css/lab.css                 estilos compartidos (claro/oscuro, impresión)
+index.html  fundamentos.html  imu.html  imu-crudo.html  balanza.html
+presion.html  venturi.html  pitot.html  sensor.html (catálogo: ?p=<id>)
+css/lab.css                      estilos (claro/oscuro, impresión, protocolo PDF)
 js/core/
-  linalg.js                 mínimos cuadrados QR, inversa
-  stats.js                  descriptiva (n−1), t y F, polyfit con covarianza, prueba F
-  physics.js                g local, ρ agua (Tanaka 2001), ρ y μ del aire, vigas
-  uncertainty.js            tipo A/B, combinada, expandida
-  signal.js                 Butterworth de fase cero, círculo, elipsoide, Allan, escalón de 1er orden, estabilometría
-  csv.js                    lectura tolerante de CSV (monitor serie, Excel)
-  store.js                  persistencia local y respaldo
-  ui.js                     formato es-CL, tablas, gráficos SVG sin dependencias
-  app.js                    estructura común: Guía → Preparación → Medición guiada → Resultados → Guardados
-js/modules/
-  *-model.js                matemática pura de cada módulo (testeable en Node)
-  *-ui.js                   interfaz de cada módulo
-  balanza-series.js         lectura de CSV del Arduino y ensayos de ruido / masa giratoria
-  generico-model.js/-ui.js  motor genérico de calibración y comparación (página sensor.html)
-  imucrudo-model.js/-ui.js  acelerómetro, giroscopio, magnetómetro
-js/perfiles/                registro y perfiles de sensores (datos + guía de cada sensor)
-tests/                      pruebas con node:test (núcleo, señales y recuperación de parámetros con datos sintéticos)
+  linalg.js                      mínimos cuadrados QR, inversa, autovalores (Jacobi)
+  stats.js                       descriptiva (n−1), t y F, polyfit con covarianza, prueba F
+  physics.js                     g local, ρ del agua (Tanaka 2001), aire, vigas, ebullición, sales, Nernst
+  uncertainty.js                 incertidumbre tipo A/B, combinada, expandida
+  signal.js                      filtro de fase cero, círculo, elipsoide, Allan, escalón, estabilometría
+  csv.js                         lectura tolerante de CSV (monitor serie, Excel)
+  store.js  ui.js  app.js        almacenamiento, gráficos SVG, estructura común de los módulos
+js/modules/                      *-model.js (matemática pura, testeable) y *-ui.js (interfaz)
+js/perfiles/                     registro y perfiles de sensores del catálogo
+tests/                           pruebas con node:test
+docs/img/                        capturas
 ```
 
-Principios: se guardan solo **datos crudos** (configuración + mediciones), los resultados se recalculan siempre; SI internamente; scripts clásicos (no módulos ES) para que funcione desde `file://`.
+Principios de diseño:
+
+- **Sin dependencias ni compilación**: HTML, CSS y JavaScript con scripts clásicos (no módulos ES), para que funcione abriendo el archivo (`file://`).
+- **Solo se guardan datos crudos** (configuración + mediciones); los resultados se recalculan siempre, así que cambiar un parámetro reprocesa todo.
+- **La matemática está separada de la interfaz**: cada `*-model.js` se prueba en Node con datos simulados de parámetros conocidos.
+
+## Agregar un sensor
+
+Agregue un perfil en `js/perfiles/` (y su `<script>` en `sensor.html` e `index.html`). Ejemplo mínimo:
+
+```js
+R.register({
+    id: 'mi-sensor', family: 'otros', name: 'Mi sensor', examples: 'XYZ-123',
+    quantity: 'Nivel', unit: 'cm', symbol: 'h',
+    reading: { label: 'Cuentas del ADC', unit: 'cuentas' },
+    references: [{ id: 'regla', label: 'Regla graduada', u: 0.05 }], refRes: 0.1,
+    levels: [0, 10, 20, 30, 40], cycles: 2, bidirectional: true,
+    models: ['lineal', 'poly2'], defaultModel: 'lineal', tolerance: 0.5,
+    guide: { objetivo: '…', principio: '…', materiales: ['…'], procedimiento: ['…'], checklist: ['…'], errores: ['…'] },
+    example: { forward: (h, cfg, row, g) => 120 + 21.5 * h + g(2), levelToRef: lv => lv }
+});
+```
+
+El motor se encarga del plan guiado, el análisis, los gráficos, el protocolo PDF y el guardado.
 
 ## Pruebas
 
 ```bash
-npm test        # o: node --test tests/*.test.js
+npm test          # o: node --test tests/*.test.js   (Node 18+)
 ```
 
-Para ver cualquier módulo con datos simulados: abrir `imu.html?ejemplo` (igual para los demás).
+Las pruebas verifican el núcleo matemático contra valores de tabla (t de Student, F, densidad del agua, gravedad, Anscombe) y que cada modelo
+**recupere los parámetros de datos simulados**: coeficientes Steinhart–Hart, factores de celdas, matriz del acelerómetro, centro del magnetómetro,
+τ de un escalón, ARW del giroscopio, respuesta de la masa giratoria, entre otros.
+
+## Advertencias
+
+- Es una herramienta **docente**. Los valores de tablas (sales saturadas, buffers de pH, especificaciones de sensores) y los criterios de norma citados
+  (ISO 80601-2-61, ANSI/AAMI EC13, IEC 60751) deben contrastarse con las fuentes originales antes de un uso formal.
+- Los sensores biomédicos caseros **no deben usarse para decisiones clínicas**. Las pruebas con personas requieren voluntarios sanos y consentimiento.
+- Las tolerancias por defecto son valores de partida: defínalas según el uso previsto.
+
+## Autoría
+
+Autor: **Nicolás Baier Quezada** · Universidad Austral de Chile.
+Con la colaboración de Vanessa Uribe en la versión inicial.
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Nicolás Baier Quezada
