@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tubo de Pitot</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body data-device="pitot">
     <header class="top"><div class="inner">
@@ -27,18 +28,17 @@
                 <br><strong>Requisito:</strong> tener calibrado el sensor de presión en el módulo <a href="presion.html">Sensor de presión</a>.</div>
 
             <h2>Principio: presión dinámica</h2>
-            <div class="math">  toma total (frente)   ──►  P_total  = P_estática + ½ ρ v²
-  tomas laterales       ──►  P_estática
-
-ΔP = P_total − P_estática = ½ ρ v²       →   v = C · √(2ΔP / ρ)</div>
+            <div class="diagram">  toma total (frente)   ──►  P_total  = P_estática + ½ ρ v²
+  tomas laterales       ──►  P_estática</div>
+            <div class="math">\[ \Delta P = P_\text{total} - P_\text{estática} = \tfrac{1}{2}\rho v^{2} \qquad\Longrightarrow\qquad v = C\sqrt{\frac{2\,\Delta P}{\rho}} \]</div>
             <ul>
                 <li>ρ es la densidad del <strong>aire</strong> (≈ 1,2 kg/m³), calculada con temperatura, presión y humedad.</li>
                 <li>ΔP crece con v²: a 2 m/s son solo 2,4 Pa y a 10 m/s, 60 Pa. Elija un sensor de rango adecuado (±500 Pa, ±2 kPa).</li>
                 <li>El Pitot mide la velocidad <strong>en su punta</strong>. Si la referencia es un caudal, la velocidad media es menor que la del centro:
-                    en flujo turbulento, <code>v_media ≈ 0,82 · v_centro</code> (ley de potencia 1/7). Ingréselo como factor de perfil.</li>
+                    en flujo turbulento, \(v_\text{media} \approx 0{,}82\, v_\text{centro}\) (ley de potencia 1/7). Ingréselo como factor de perfil.</li>
             </ul>
             <h3>Incertidumbre de C</h3>
-            <div class="math">(u_C / C)² = (u_vref / vref)² + (½ · u_ΔP / ΔP)² + (½ · u_ρ / ρ)²</div>
+            <div class="math">\[ \left(\frac{u_C}{C}\right)^{2} = \left(\frac{u_{v_\text{ref}}}{v_\text{ref}}\right)^{2} + \left(\frac{1}{2}\frac{u_{\Delta P}}{\Delta P}\right)^{2} + \left(\frac{1}{2}\frac{u_\rho}{\rho}\right)^{2} \]</div>
 
             <h2>Procedimiento</h2>
             <ol class="steps">
@@ -116,15 +116,18 @@
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/presion-model.js"></script>
-    <script src="js/modules/flujo-model.js"></script>
-    <script src="js/modules/flujo-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/presion-model.js?v=15ac593e"></script>
+    <script src="js/modules/flujo-model.js?v=860a5430"></script>
+    <script src="js/modules/flujo-ui.js?v=9937577a"></script>
 </body>
 </html>

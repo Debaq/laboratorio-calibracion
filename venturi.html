@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medidor Venturi</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body data-device="venturi">
     <header class="top"><div class="inner">
@@ -27,26 +28,22 @@
                 <br><strong>Requisito:</strong> tener calibrado el sensor de presión en el módulo <a href="presion.html">Sensor de presión</a>.</div>
 
             <h2>Principio: Bernoulli + continuidad</h2>
-            <div class="math">   D (entrada, P₁)        d (garganta, P₂)
+            <div class="diagram">   D (entrada, P₁)        d (garganta, P₂)
   ════════╗                    ╔════════
           ╚═══╗          ╔═════╝
               ╚══════════╝
-     →  v₁                v₂ > v₁ ,  P₂ < P₁
-
-Continuidad:  Q = A₁ v₁ = A₂ v₂
-Bernoulli:    P₁ − P₂ = ½ ρ (v₂² − v₁²)
-
-Q_teórico = A₂ · √( 2ΔP / (ρ (1 − β⁴)) )      β = d/D,  A₂ = π d²/4
-C_d       = Q_real / Q_teórico                (&lt; 1 por fricción y perfil de velocidad)</div>
+     →  v₁                v₂ > v₁ ,  P₂ < P₁</div>
+            <div class="math">\[ \text{Continuidad: } Q = A_1 v_1 = A_2 v_2 \qquad \text{Bernoulli: } P_1 - P_2 = \tfrac{1}{2}\rho\,(v_2^{2} - v_1^{2}) \]
+                \[ Q_\text{teórico} = A_2 \sqrt{\frac{2\,\Delta P}{\rho\,(1 - \beta^{4})}} \qquad \beta = \frac{d}{D},\quad A_2 = \frac{\pi d^{2}}{4} \qquad C_d = \frac{Q_\text{real}}{Q_\text{teórico}} < 1 \]</div>
             <ul>
                 <li><strong>ρ es la densidad del fluido que pasa por el Venturi.</strong> Con aire es ≈ 1,2 kg/m³ y se calcula con temperatura, presión y humedad.
                     La densidad del agua solo interviene al calibrar el sensor de presión.</li>
-                <li>El Reynolds en la garganta, <code>Re = 4ρQ / (π d μ)</code>, indica el régimen. C<sub>d</sub> suele bajar a Reynolds bajos.</li>
+                <li>El Reynolds en la garganta, \(\mathrm{Re} = \frac{4\rho Q}{\pi d \mu}\), indica el régimen. C<sub>d</sub> suele bajar a Reynolds bajos.</li>
                 <li>Con aire, si la velocidad en la garganta supera Mach 0,3 (~100 m/s) la hipótesis de flujo incompresible falla.</li>
             </ul>
 
             <h3>Incertidumbre de C<sub>d</sub></h3>
-            <div class="math">(u_Cd / Cd)² = (u_Q / Q)² + (½ · u_ΔP / ΔP)² + (½ · u_ρ / ρ)² + (2 · u_d / d)²</div>
+            <div class="math">\[ \left(\frac{u_{C_d}}{C_d}\right)^{2} = \left(\frac{u_Q}{Q}\right)^{2} + \left(\frac{1}{2}\frac{u_{\Delta P}}{\Delta P}\right)^{2} + \left(\frac{1}{2}\frac{u_\rho}{\rho}\right)^{2} + \left(2\,\frac{u_d}{d}\right)^{2} \]</div>
             <p>El diámetro de la garganta pesa el doble. Mídalo con pie de metro en 3 direcciones y promedie. A caudales bajos domina el término de ΔP.</p>
 
             <h2>Referencia de caudal</h2>
@@ -148,15 +145,18 @@ C_d       = Q_real / Q_teórico                (&lt; 1 por fricción y perfil de
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/presion-model.js"></script>
-    <script src="js/modules/flujo-model.js"></script>
-    <script src="js/modules/flujo-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/presion-model.js?v=15ac593e"></script>
+    <script src="js/modules/flujo-model.js?v=860a5430"></script>
+    <script src="js/modules/flujo-ui.js?v=9937577a"></script>
 </body>
 </html>

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Posturógrafo de Balanza</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -48,14 +49,11 @@
 
             <h2>Principio: estática de un cuerpo rígido</h2>
             <p>Cada celda <em>i</em>, ubicada en (x<sub>i</sub>, y<sub>i</sub>), entrega un número crudo r<sub>i</sub>. Después de la tara (plataforma vacía, r0<sub>i</sub>):</p>
-            <div class="math">F_i = k_i · (r_i − r0_i)                    k_i: factor de la celda [N/cuenta]
-
-Con una masa M en (x, y):
-  Σ F_i          = M·g          (equilibrio de fuerzas)
-  Σ F_i · x_i    = M·g·x        (equilibrio de momentos)
-  Σ F_i · y_i    = M·g·y
-
-Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i</div>
+            <div class="math">\[ F_i = k_i\,(r_i - r_{0,i}) \qquad k_i:\ \text{factor de la celda (N/cuenta)} \]
+                <p>Con una masa \(M\) apoyada en \((x, y)\), equilibrio de fuerzas y de momentos:</p>
+                \[ \sum_i F_i = M g \qquad \sum_i F_i\,x_i = M g\,x \qquad \sum_i F_i\,y_i = M g\,y \]
+                <p>Centro de presión:</p>
+                \[ \mathrm{CoP}_x = \frac{\sum_i F_i\,x_i}{\sum_i F_i} \qquad \mathrm{CoP}_y = \frac{\sum_i F_i\,y_i}{\sum_i F_i} \]</div>
             <p>Cada carga aporta <strong>3 ecuaciones</strong> y hay <strong>4 incógnitas</strong> (k<sub>1</sub>…k<sub>4</sub>). Con varias masas en varias
                 posiciones se resuelve por mínimos cuadrados. Así no hace falta calibrar cada celda por separado y la calibración queda
                 ajustada a la plataforma completa, tal como se usa.</p>
@@ -63,7 +61,7 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
 
             <h3>¿Por qué el CoP empeora con cargas pequeñas?</h3>
             <p>El CoP es un cociente entre momento y fuerza. El mismo ruido de las celdas produce un error de CoP inversamente proporcional a la carga:
-                <code>u(CoP) ≈ u(F)·ℓ / (M·g)</code>. Por eso se valida con masas parecidas al peso de las personas que se van a evaluar.</p>
+                \(u(\mathrm{CoP}) \approx \frac{u(F)\,\ell}{M g}\). Por eso se valida con masas parecidas al peso de las personas que se van a evaluar.</p>
 
             <h2>Materiales</h2>
             <ul>
@@ -74,7 +72,7 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
             </ul>
 
             <h2>Sistema de coordenadas</h2>
-            <div class="math">          +y (adelante / anterior)
+            <div class="diagram">          +y (adelante / anterior)
                ↑
      C1 ●──────┼──────● C2
         │      │      │
@@ -106,19 +104,18 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
                 Use el <strong>mismo filtro y muestreo</strong> que usará con los sujetos: la velocidad media del ruido crece con la frecuencia de muestreo.</p>
 
             <h2>Ensayo 3 · Masa giratoria</h2>
-            <div class="math">        vista superior                     vista lateral
+            <div class="diagram">        vista superior                     vista lateral
       ·  ·  m  ·  ·                  m ●───── brazo r
     ·            ·                     │
    ·      ⊕       ·     ←  R         motor ▓  ← masa base (lastre)
     ·  motor     ·                 ════╧════════════  superficie
-      ·  ·  ·  ·                   ▲ celdas ▲    h = altura de m sobre las celdas
-
-R(ω) = (m·r / M) · (1 + ω²·h / g)          M = masa total sobre la plataforma</div>
+      ·  ·  ·  ·                   ▲ celdas ▲    h = altura de m sobre las celdas</div>
+            <div class="math">\[ R(\omega) = \frac{m\,r}{M}\left(1 + \frac{\omega^{2} h}{g}\right) \qquad M:\ \text{masa total sobre la plataforma} \]</div>
             <ul>
                 <li>Motor DC con reductora (5–120 rpm) o paso a paso, fijo sobre una base pesada en el centro. Brazo rígido con una masa m (0,5–2 kg) a radio r.</li>
                 <li>Mida r (eje del motor → centro de la masa) y h (plano de apoyo de las celdas → centro de la masa).</li>
                 <li>Registre al menos <strong>3 vueltas</strong> a cada velocidad: 12, 30, 60, 90 y 120 rpm (0,2 a 2 Hz).</li>
-                <li>El término <code>ω²·h/g</code> es la fuerza centrífuga: a 1 Hz con h = 10 cm agrega 40 % al radio. Por eso h debe medirse bien.</li>
+                <li>El término \(\omega^{2} h/g\) es la fuerza centrífuga: a 1 Hz con h = 10 cm agrega 40 % al radio. Por eso h debe medirse bien.</li>
                 <li>Si el radio medido cae por debajo del teórico a frecuencias altas, el filtro o el muestreo están recortando la señal.
                     Si el círculo se deforma o Fz oscila, los 4 HX711 no están muestreando al mismo tiempo.</li>
             </ul>
@@ -269,7 +266,7 @@ void loop() {
 
         <section class="panel" id="tab-dinamico" hidden>
             <div class="callout">Fantoma de masa giratoria: el CoP teórico es un círculo de radio conocido. Una corrida (archivo) por cada velocidad del motor.</div>
-            <div class="math">R(ω) = (m·r / M) · (1 + ω²·h / g)          razón = R medido / R teórico  → ideal 1 en toda la banda</div>
+            <div class="math">\[ R(\omega) = \frac{m\,r}{M}\left(1 + \frac{\omega^{2} h}{g}\right) \qquad \text{razón} = \frac{R_\text{medido}}{R_\text{teórico}} \;\to\; 1 \text{ en toda la banda} \]</div>
             <div class="card">
                 <h3>Fantoma</h3>
                 <div class="grid three">
@@ -303,16 +300,19 @@ void loop() {
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/signal.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/balanza-model.js"></script>
-    <script src="js/modules/balanza-series.js"></script>
-    <script src="js/modules/balanza-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/signal.js?v=e0ab2496"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/balanza-model.js?v=6c6e94b7"></script>
+    <script src="js/modules/balanza-series.js?v=25d3b6d6"></script>
+    <script src="js/modules/balanza-ui.js?v=6f422abd"></script>
 </body>
 </html>

@@ -67,10 +67,7 @@
         },
         guide: {
             objetivo: 'Obtener la curva R → T del termistor. Un NTC es muy sensible (≈ −4 %/°C) pero NO lineal: la ecuación correcta es la de Steinhart–Hart.',
-            principio: `<div class="math">Steinhart–Hart:  1/T = A + B·ln R + C·(ln R)³       (T en kelvin)
-Modelo Beta:     1/T = 1/T₀ + (1/β)·ln(R/R₀)        (2 parámetros, menos exacto)
-
-Con divisor (sensor abajo):  R = R_fija · N / (N_max − N)</div>
+            principio: `<div class="math">\\[ \\text{Steinhart–Hart:}\\quad \\frac{1}{T} = A + B\\ln R + C\\,(\\ln R)^{3} \\qquad (T\\ \\text{en kelvin}) \\]\\[ \\text{Beta:}\\quad \\frac{1}{T} = \\frac{1}{T_0} + \\frac{1}{\\beta}\\ln\\frac{R}{R_0} \\qquad \\text{(2 parámetros, menos exacto)} \\]\\[ \\text{Divisor (sensor abajo):}\\quad R = R_\\text{fija}\\,\\frac{N}{N_\\text{máx} - N} \\]</div>
                 <p>Con 3 temperaturas bien distribuidas Steinhart–Hart da ±0,02 °C en 0–80 °C; el modelo Beta suele desviarse 0,3–1 °C en los extremos.
                    El sistema ajusta ambos y los compara por AICc.</p>`,
             procedimiento: [
@@ -100,8 +97,7 @@ Con divisor (sensor abajo):  R = R_fija · N / (N_max − N)</div>
             { label: 'Salida a 0 °C', value: `${(-fit.coef[0] / fit.coef[1]).toFixed(1)} mV`, sub: 'LM35: 0 · TMP36: 500' }] : [],
         guide: {
             objetivo: 'Verificar la sensibilidad (mV/°C) y el offset del sensor, incluyendo el error que agrega el ADC de la placa.',
-            principio: `<div class="math">LM35:  V = 10 mV/°C · T            TMP36:  V = 500 mV + 10 mV/°C · T
-Con ADC:  V = N · Vref / (2ⁿ − 1)     → el error de Vref es error de ganancia</div>
+            principio: `<div class="math">\\[ \\text{LM35: } V = 10\\ \\tfrac{\\mathrm{mV}}{^\\circ\\mathrm{C}}\\;T \\qquad \\text{TMP36: } V = 500\\ \\mathrm{mV} + 10\\ \\tfrac{\\mathrm{mV}}{^\\circ\\mathrm{C}}\\;T \\]\\[ \\text{Con ADC: } V = N\\,\\frac{V_\\text{ref}}{2^{n} - 1} \\]<p>El error de \\(V_\\text{ref}\\) es un error de ganancia.</p></div>
                 <p>El ADC de 10 bits a 5 V tiene un paso de 4,9 mV = 0,49 °C: la resolución de la placa suele ser peor que el sensor.
                    Use la referencia interna de 1,1 V (<code>analogReference(INTERNAL)</code>) para bajar el paso a 0,1 °C.</p>`,
             procedimiento: [
@@ -125,8 +121,7 @@ Con ADC:  V = N · Vref / (2ⁿ − 1)     → el error de Vref es error de gana
         stepAction: tempStep('°C'),
         guide: {
             objetivo: `Medir el error del sensor (sesgo y máximo) contra la referencia y compararlo con la exactitud del fabricante (±${tol} °C). Si no cumple, obtener una corrección lineal.`,
-            principio: `<div class="math">error = T_sensor − T_referencia
-corrección:  T = c₀ + c₁ · T_sensor</div>
+            principio: `<div class="math">\\[ \\text{error} = T_\\text{sensor} - T_\\text{ref} \\qquad \\text{corrección: } T = c_0 + c_1\\,T_\\text{sensor} \\]</div>
                 <p>Los sensores digitales ya entregan °C: lo que se calibra es su error. La mayoría tiene un sesgo casi constante que una corrección de offset elimina.</p>`,
             procedimiento: [
                 'Amarre el sensor a la sonda de referencia (a menos de 1 cm).',
@@ -159,8 +154,7 @@ corrección:  T = c₀ + c₁ · T_sensor</div>
         },
         guide: {
             objetivo: 'Obtener la curva R → T del RTD y verificar R₀ y α contra la norma IEC 60751.',
-            principio: `<div class="math">Callendar–Van Dusen (T ≥ 0 °C):  R = R₀ · (1 + A·T + B·T²)
-A = 3,9083×10⁻³ °C⁻¹    B = −5,775×10⁻⁷ °C⁻²    α = (R₁₀₀ − R₀)/(100·R₀) = 0,00385</div>
+            principio: `<div class="math">\\[ R = R_0\\,(1 + A\\,T + B\\,T^{2}) \\qquad (T \\ge 0\\ ^\\circ\\mathrm{C},\\ \\text{Callendar–Van Dusen}) \\]\\[ A = 3{,}9083\\times10^{-3}\\ ^\\circ\\mathrm{C}^{-1} \\quad B = -5{,}775\\times10^{-7}\\ ^\\circ\\mathrm{C}^{-2} \\quad \\alpha = \\frac{R_{100} - R_0}{100\\,R_0} = 0{,}00385 \\]</div>
                 <p>En el sentido de uso se ajusta T = c₀ + c₁·R + c₂·R². Clase B admite ±(0,3 + 0,005·|T|) °C.</p>`,
             procedimiento: [
                 'Use conexión de 3 o 4 hilos: con 2 hilos la resistencia de los cables (~0,4 Ω = 1 °C) se suma como error.',

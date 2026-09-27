@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fundamentos de Calibración</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -20,49 +21,46 @@
             (una ecuación) para compensar el error. Calibrar no es “ajustar hasta que dé cero”: es medir cuánto se equivoca y con qué confianza lo sabemos.</p>
 
         <div class="callout"><strong>Regla de oro:</strong> la referencia debe ser al menos 4 veces más exacta que la tolerancia que se quiere verificar
-            (<em>TUR ≥ 4:1</em>). Un transportador de 1° no sirve para verificar un IMU que debería medir con ±1°.</div>
+            (\(\mathrm{TUR} = \frac{\text{tolerancia}}{U_\text{ref}} \ge 4\)). Un transportador de 1° no sirve para verificar un IMU que debería medir con ±1°.</div>
 
         <h2>Modelo de error</h2>
         <p>Casi todos los sensores de este laboratorio se describen bien con una recta:</p>
-        <div class="math">lectura = a + b · valor_verdadero + ε
-
-a  → offset (error de cero)
-b  → ganancia (sensibilidad). Ideal: b = 1 si lectura y referencia están en la misma unidad
-ε  → error aleatorio (ruido, repetibilidad)</div>
-        <p>Si <code>b</code> y <code>a</code> se conocen, la <strong>corrección</strong> es <code>valor = (lectura − a) / b</code>.
-            El ajuste se hace por mínimos cuadrados y cada coeficiente trae su error estándar: si <code>|b − 1| &gt; 2·se(b)</code>
+        <div class="math">\[ \text{lectura} = a + b\cdot\text{valor verdadero} + \varepsilon \]
+            <p>\(a\): offset (error de cero) · \(b\): ganancia o sensibilidad (ideal \(b=1\) si lectura y referencia están en la misma unidad) · \(\varepsilon\): error aleatorio (ruido, repetibilidad)</p></div>
+        <p>Si \(a\) y \(b\) se conocen, la <strong>corrección</strong> es \(\text{valor} = \frac{\text{lectura} - a}{b}\).
+            El ajuste se hace por mínimos cuadrados y cada coeficiente trae su error estándar: si \(|b - 1| > 2\,\mathrm{se}(b)\)
             la ganancia es significativamente distinta de 1.</p>
 
         <h2>Métricas que verá en los resultados</h2>
         <div class="table-wrap"><table>
             <thead><tr><th>Métrica</th><th>Cómo se calcula</th><th>Qué indica</th></tr></thead>
             <tbody>
-                <tr><td>Sesgo (bias)</td><td>promedio de (lectura − referencia)</td><td>Error sistemático. Se puede corregir.</td></tr>
-                <tr><td>Repetibilidad</td><td>desviación estándar combinada de repeticiones en el mismo punto (n − 1)</td><td>Ruido. No se corrige; se reduce promediando.</td></tr>
+                <tr><td>Sesgo (bias)</td><td>\(\bar e = \frac{1}{n}\sum (\text{lectura} - \text{ref})\)</td><td>Error sistemático. Se puede corregir.</td></tr>
+                <tr><td>Repetibilidad</td><td>\(s_r = \sqrt{\sum (n_j-1)s_j^2 / \sum (n_j-1)}\) de repeticiones en un mismo punto</td><td>Ruido. No se corrige; se reduce promediando.</td></tr>
                 <tr><td>Histéresis</td><td>diferencia entre llegar al punto subiendo y bajando</td><td>Fricción, holguras, memoria del material.</td></tr>
                 <tr><td>No linealidad</td><td>máximo residuo respecto a la recta ajustada</td><td>Cuánto se aparta el sensor de una recta.</td></tr>
-                <tr><td>RMSE</td><td>√ promedio(error²)</td><td>Error típico total (sesgo + ruido).</td></tr>
-                <tr><td>SEE</td><td>√(Σ residuo² / (n − p))</td><td>Error típico que queda después de corregir con la recta.</td></tr>
-                <tr><td>R²</td><td>1 − SS<sub>res</sub>/SS<sub>tot</sub></td><td>Poco útil en calibración: casi siempre es 0,99…; mire los residuos.</td></tr>
+                <tr><td>RMSE</td><td>\(\sqrt{\frac{1}{n}\sum e_i^2}\)</td><td>Error típico total (sesgo + ruido).</td></tr>
+                <tr><td>SEE</td><td>\(\sqrt{\sum r_i^2/(n-p)}\)</td><td>Error típico que queda después de corregir con la recta.</td></tr>
+                <tr><td>R²</td><td>\(1 - SS_\text{res}/SS_\text{tot}\)</td><td>Poco útil en calibración: casi siempre es 0,99…; mire los residuos.</td></tr>
             </tbody>
         </table></div>
 
         <h2>Incertidumbre (GUM, versión práctica)</h2>
         <ol class="steps">
-            <li><strong>Tipo A</strong> — de las repeticiones: <code>u = s / √n</code>.</li>
-            <li><strong>Tipo B</strong> — de otra información. Resolución δ de una escala o display: <code>u = δ / √12</code>.
-                Especificación ±a del fabricante: <code>u = a / √3</code>. Certificado con U y k: <code>u = U / k</code>.</li>
+            <li><strong>Tipo A</strong> — de las repeticiones: \(u = s/\sqrt{n}\).</li>
+            <li><strong>Tipo B</strong> — de otra información. Resolución \(\delta\) de una escala o display: \(u = \delta/\sqrt{12}\).
+                Especificación \(\pm a\) del fabricante: \(u = a/\sqrt{3}\). Certificado con \(U\) y \(k\): \(u = U/k\).</li>
             <li><strong>Propagar</strong> cada entrada a la salida con su coeficiente de sensibilidad (derivada):
-                <div class="math">y = f(x₁, x₂, …)   →   u_c(y)² = Σ (∂f/∂xᵢ)² · u(xᵢ)²</div>
-                Ejemplo (IMU): θ = asin(d/L) → ∂θ/∂d = 1/(L·cos θ), ∂θ/∂L = −tan θ / L.</li>
-            <li><strong>Expandir</strong>: <code>U = k · u_c</code>, con <code>k = 2</code> (≈ 95 % de confianza).</li>
+                <div class="math">\[ y = f(x_1, x_2, \dots) \quad\Rightarrow\quad u_c^2(y) = \sum_i \left(\frac{\partial f}{\partial x_i}\right)^{2} u^2(x_i) \]</div>
+                Ejemplo (IMU): \(\theta = \arcsin(d/L)\) da \(\frac{\partial\theta}{\partial d} = \frac{1}{L\cos\theta}\) y \(\frac{\partial\theta}{\partial L} = -\frac{\tan\theta}{L}\).</li>
+            <li><strong>Expandir</strong>: \(U = k\,u_c\), con \(k = 2\) (≈ 95 % de confianza).</li>
             <li><strong>Declarar</strong>: “error máximo 0,32° ; U = 0,15° (k = 2)”.</li>
         </ol>
 
         <h2>¿Cumple o no cumple?</h2>
         <p>Se compara con una <strong>tolerancia</strong> definida <em>antes</em> de medir (por el fabricante, la norma o el uso clínico).
             Los módulos usan la regla conservadora:</p>
-        <div class="math">cumple  ⇔  |error máximo| + U_referencia ≤ tolerancia</div>
+        <div class="math">\[ \text{cumple} \iff |\text{error máximo}| + U_\text{referencia} \le \text{tolerancia} \]</div>
 
         <h2>Buenas prácticas en el laboratorio</h2>
         <ul>
@@ -81,5 +79,8 @@ b  → ganancia (sensibilidad). Ideal: b = 1 si lectura y referencia están en l
     </main>
 
     <footer class="foot">Laboratorio de Calibración · Universidad Austral de Chile</footer>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
 </body>
 </html>

@@ -1,0 +1,1 @@
+KaTeX 0.18.9 — https://katex.org (MIT). Solo fuentes woff2 (todos los navegadores actuales).

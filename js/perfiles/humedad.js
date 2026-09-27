@@ -32,10 +32,7 @@
         models: ['lineal', 'poly2'], defaultModel: 'lineal', tolerance: 3, range: [10, 95], timeResponse: true,
         guide: {
             objetivo: 'Medir el error del sensor de humedad con puntos de HR conocidos y, si hace falta, corregirlo. Es la calibración de humedad más exacta que se puede hacer sin equipos caros.',
-            principio: `<div class="math">Sobre una solución salina SATURADA, en un recipiente cerrado, el aire llega a una HR fija
-que depende solo de la sal y (poco) de la temperatura:
-
-  LiCl ≈ 11 %   MgCl₂ ≈ 33 %   K₂CO₃ ≈ 43 %   NaCl ≈ 75 %   KCl ≈ 85 %   K₂SO₄ ≈ 97 %</div>
+            principio: `<div class="math"><p>Sobre una solución salina <strong>saturada</strong>, en un recipiente cerrado, el aire llega a una HR fija que depende solo de la sal y (poco) de la temperatura:</p>\\[ \\mathrm{LiCl} \\approx 11\\,\\% \\quad \\mathrm{MgCl_2} \\approx 33\\,\\% \\quad \\mathrm{K_2CO_3} \\approx 43\\,\\% \\quad \\mathrm{NaCl} \\approx 75\\,\\% \\quad \\mathrm{KCl} \\approx 85\\,\\% \\quad \\mathrm{K_2SO_4} \\approx 97\\,\\% \\]</div>
                 <p>El sistema interpola la tabla de Greenspan (1977) con la temperatura que usted mida en la cámara. La sal de mesa (NaCl, 75 %) es la más fácil y estable.</p>`,
             materiales: [
                 'Frascos herméticos (tipo mermelada) — uno por sal.',
@@ -82,8 +79,7 @@ que depende solo de la sal y (poco) de la temperatura:
         models: ['lineal'], tolerance: 1, range: [980, 1030], criterion: 'loa',
         guide: {
             objetivo: 'Estimar el sesgo del barómetro (casi todo su error) comparándolo con una referencia en distintos días.',
-            principio: `<div class="math">Presión de estación (a la altitud h del sensor) a partir del QNH (nivel del mar):
-  p = QNH · (1 − 2,25577×10⁻⁵ · h)^5,25588          1 m de altura ≈ 0,12 hPa</div>
+            principio: `<div class="math"><p>Presión de estación (a la altitud \\(h\\) del sensor) a partir del QNH (nivel del mar):</p>\\[ p = \\mathrm{QNH}\\,\\left(1 - 2{,}25577\\times10^{-5}\\,h\\right)^{5{,}25588} \\]<p>1 m de altura ≈ 0,12 hPa.</p></div>
                 <p>La presión no se puede fijar a voluntad, así que se compara sensor y referencia en distintos momentos (análisis de Bland–Altman).
                    El QNH de la DMC está reducido al nivel del mar: sin la conversión, el "error" sería la altitud.</p>`,
             materiales: ['Sensor en interior, lejos de corrientes de aire y del sol.', 'Referencia: barómetro calibrado o QNH de la estación meteorológica más cercana (DMC).', 'Altitud del sensor (GPS/mapa topográfico + piso del edificio).'],

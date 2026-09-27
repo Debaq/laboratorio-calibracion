@@ -50,7 +50,14 @@ small, .small { font-size: .85rem; }
 code, kbd, pre { font-family: var(--mono); font-size: .9em; }
 kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; background: var(--surface-2); }
 pre { background: var(--surface-2); padding: 12px; border-radius: 8px; overflow-x: auto; }
-.math { font-family: var(--mono); background: var(--surface-2); padding: 10px 14px; border-radius: 8px; margin: .6em 0; overflow-x: auto; white-space: pre; line-height: 1.6; }
+/* Fórmulas (KaTeX) y diagramas en texto */
+.math { background: var(--surface-2); padding: 10px 16px; border-radius: 8px; margin: .6em 0; overflow-x: auto; overflow-y: hidden; }
+.math .katex-display { margin: .45em 0; }
+.math .katex-display > .katex { text-align: left; }
+.math p, .math .note { margin: .2em 0; font-size: .9rem; color: var(--muted); }
+.katex { font-size: 1.08em; }
+.diagram { font-family: var(--mono); background: var(--surface-2); padding: 10px 14px; border-radius: 8px; margin: .6em 0; overflow-x: auto; white-space: pre; line-height: 1.45; font-size: .88rem; }
+.tex-fallback { font-family: var(--mono); white-space: pre-wrap; }
 
 /* ---------- Cabecera ---------- */
 .top { background: var(--surface); border-bottom: 1px solid var(--border); }
@@ -159,7 +166,10 @@ table.matrix td:first-child { text-align: left; font-family: var(--font); }
 /* ---------- Gráficos ---------- */
 .plots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 12px; }
 .plot { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; }
-.plot figcaption { font-weight: 600; font-size: .92rem; margin: 0 0 4px 6px; }
+.plot figcaption { font-weight: 600; font-size: .92rem; margin: 0 0 4px 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.plot-tools { display: flex; gap: 4px; flex: none; }
+.plot-tools button { min-height: 26px; padding: 1px 8px; font-size: .75rem; font-weight: 600; color: var(--muted); }
+.plot-tools button:hover { color: var(--accent); border-color: var(--accent); }
 .plot svg { width: 100%; height: auto; display: block; }
 .plot .frame { fill: none; stroke: var(--border); }
 .plot .grid { stroke: var(--border); stroke-width: .6; opacity: .7; }
@@ -200,13 +210,6 @@ table.matrix td:first-child { text-align: left; font-family: var(--font); }
 .start-steps a:hover { border-color: var(--accent); }
 .start-steps span { color: var(--muted); font-size: .9rem; }
 
-.featured { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
-.feature { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--border);
-    border-top: 4px solid var(--accent); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
-.feature:hover { border-color: var(--accent); transform: translateY(-2px); }
-.feature strong { font-size: 1.08rem; }
-.feature-sum { font-size: .95rem; }
-.feature-go { margin-top: auto; color: var(--accent); font-weight: 600; font-size: .92rem; }
 
 .cat-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
 .fam-filter { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; margin-bottom: 4px; scrollbar-width: thin; }
@@ -299,7 +302,8 @@ footer.foot { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; color:
 #protocol-print table.sheet .act { font-size: 8.5pt; width: 36%; }
 #protocol-print table.sheet .w { min-width: 58px; }
 #protocol-print table.sheet .obs { width: 12%; }
-#protocol-print .math, #protocol-print pre { background: none; border: 1px solid #bbb; font-size: 8.5pt; padding: 6px 8px; white-space: pre-wrap; break-inside: avoid; }
+#protocol-print .diagram, #protocol-print .math, #protocol-print pre { background: none; border: 1px solid #bbb; font-size: 8.5pt; padding: 6px 8px; white-space: pre-wrap; break-inside: avoid; }
+#protocol-print .math { white-space: normal; font-size: 9.5pt; }
 #protocol-print .callout { background: none !important; border: 1px solid #000; border-left-width: 4px; padding: 6px 10px; }
 #protocol-print .card { box-shadow: none; border: 1px solid #bbb; padding: 6px 10px; margin: 6px 0; }
 #protocol-print .check { padding: 2px 0; }

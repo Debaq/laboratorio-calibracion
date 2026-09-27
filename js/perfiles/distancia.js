@@ -24,8 +24,7 @@
         settle: 'Promedie 10 lecturas.',
         guide: {
             objetivo: 'Calibrar la distancia del sensor ultrasónico corrigiendo la velocidad del sonido por temperatura y el retardo propio del sensor.',
-            principio: `<div class="math">d = c(T) · t / 2          c(T) = 331,3 · √(1 + T/273,15)  m/s
-0 °C → 331 m/s    20 °C → 343 m/s    30 °C → 349 m/s   (≈ 0,17 %/°C)</div>
+            principio: `<div class="math">\\[ d = \\frac{c(T)\\,t}{2} \\qquad c(T) = 331{,}3\\,\\sqrt{1 + \\frac{T}{273{,}15}}\\ \\ \\mathrm{m/s} \\]<p>0 °C → 331 m/s · 20 °C → 343 m/s · 30 °C → 349 m/s (≈ 0,17 %/°C)</p></div>
                 <p>Las librerías suelen usar c fija (340 o 343 m/s): con 10 °C de diferencia el error es 1,8 cm a 1 m.
                    Registrando el tiempo de eco en µs y la temperatura, el sistema calcula la distancia acústica y la ecuación corrige lo que queda
                    (retardo del circuito y posición real del transductor).</p>`,
@@ -47,8 +46,7 @@
         settle: 'Promedie 20 lecturas.',
         guide: {
             objetivo: 'Medir el offset y el error de escala del sensor ToF; ambos dependen del color del blanco y de la luz ambiente.',
-            principio: `<div class="math">d = c · t / 2   (c = velocidad de la luz: no depende de la temperatura)
-error típico: offset de 10–30 mm (vidrio de la tapa, calibración de fábrica) + % de la distancia</div>
+            principio: `<div class="math">\\[ d = \\frac{c\\,t}{2} \\]<p>\\(c\\): velocidad de la luz (no depende de la temperatura). Error típico: offset de 10–30 mm (vidrio de la tapa, calibración de fábrica) más un % de la distancia.</p></div>
                 <p>El VL53L0X tiene funciones de calibración de offset y crosstalk: esta prueba entrega los valores para ingresarlas o corregir en su código.</p>`,
             materiales: ['Huincha metálica.', 'Blanco blanco mate (≈ 88 % reflectancia) y, opcional, uno gris o negro para comparar.', 'Ambiente con luz controlada (sin sol directo).'],
             procedimiento: ['Fije el sensor y defina el cero en la cara del sensor (o del vidrio protector si lo usa).', 'Mida en cada distancia del plan promediando 20 lecturas.', 'Opcional: repita con blanco oscuro y compare la ecuación.'],
@@ -69,8 +67,7 @@ error típico: offset de 10–30 mm (vidrio de la tapa, calibración de fábrica
         settle: 'Promedie 20 lecturas (la salida tiene picos de ruido).',
         guide: {
             objetivo: 'Obtener la curva tensión → distancia, que es fuertemente NO lineal, y el rango donde es confiable.',
-            principio: `<div class="math">Triangulación: V ∝ 1/d aproximadamente     →   d = c₀ + c₁ / V
-Bajo 10 cm la curva se DOBLA: la misma tensión corresponde a dos distancias.</div>
+            principio: `<div class="math">\\[ V \\propto \\frac{1}{d} \\quad\\Longrightarrow\\quad d = c_0 + \\frac{c_1}{V} \\]<p>Bajo 10 cm la curva se <strong>dobla</strong>: la misma tensión corresponde a dos distancias.</p></div>
                 <p>El sistema compara el modelo inverso, la ley de potencia y un polinomio. La resolución empeora con la distancia: a 80 cm, 10 mV ≈ 2 cm.</p>`,
             materiales: ['Huincha metálica.', 'Blanco blanco mate de 20×20 cm.', 'Condensador de 10 µF entre Vcc y GND del sensor (reduce picos).'],
             procedimiento: ['Monte el sensor fijo; defina el cero en su cara frontal.', 'Recorra el plan desde 10 cm hacia afuera promediando 20 lecturas.', 'No use distancias menores a 10 cm.'],

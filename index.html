@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorio de Calibración</title>
     <meta name="description" content="Guías y herramientas para calibrar los sensores de proyectos con Arduino y ESP32: plan paso a paso, incertidumbre, ecuación de corrección y protocolo PDF.">
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body class="home">
     <header class="home-hero">
@@ -53,12 +53,6 @@
                 </ol>
             </section>
 
-            <section id="posturografia">
-                <h2>Posturografía</h2>
-                <p class="muted section-lead">Los tres módulos del posturógrafo: el ángulo que entrega la IMU, sus sensores internos y la plataforma de fuerza.</p>
-                <div class="featured" id="featured"></div>
-            </section>
-
             <section id="catalogo">
                 <div class="cat-head">
                     <h2>Todos los sensores <span class="count" id="cat-count"></span></h2>
@@ -74,18 +68,18 @@
         <span>Laboratorio de Calibración · Universidad Austral de Chile</span>
         <span>Nicolás Baier Quezada · colaboración de Vanessa Uribe</span>
         <span><a href="https://github.com/Debaq/laboratorio-calibracion">Código fuente</a> · <a href="LICENSE">Licencia MIT</a></span>
-        <span class="muted">Funciona sin internet. Los datos quedan en este navegador: use “Respaldo completo” en Guardados para moverlos.</span>
+        <span class="muted">Versión <!--version-->v2.2.0<!--/version--> · Funciona sin internet. Los datos quedan en este navegador: use “Respaldo completo” en Guardados para moverlos.</span>
     </footer>
 
-    <script src="js/core/physics.js"></script>
-    <script src="js/perfiles/registry.js"></script>
-    <script src="js/perfiles/temperatura.js"></script>
-    <script src="js/perfiles/humedad.js"></script>
-    <script src="js/perfiles/distancia.js"></script>
-    <script src="js/perfiles/fuerza-electricos.js"></script>
-    <script src="js/perfiles/varios.js"></script>
-    <script src="js/perfiles/biomedicos.js"></script>
-    <script src="js/catalogo.js"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/perfiles/registry.js?v=540a1dd6"></script>
+    <script src="js/perfiles/temperatura.js?v=c255e769"></script>
+    <script src="js/perfiles/humedad.js?v=94ab9dbc"></script>
+    <script src="js/perfiles/distancia.js?v=1bad5d50"></script>
+    <script src="js/perfiles/fuerza-electricos.js?v=2a7ec257"></script>
+    <script src="js/perfiles/varios.js?v=36415572"></script>
+    <script src="js/perfiles/biomedicos.js?v=9e30801c"></script>
+    <script src="js/catalogo.js?v=bf1565d0"></script>
     <script>
     (function () {
         'use strict';
@@ -106,16 +100,6 @@
                 ${it.needs ? `<span class="tile-need"><b>Necesitas:</b> ${esc(it.needs)}</span>` : ''}
             </a>`;
         }
-
-        // ---------- Posturografía destacada ----------
-        $('#featured').innerHTML = all.filter(it => it.featured).map(it => `
-            <a class="feature" href="${it.href}">
-                <strong>${esc(it.name)}</strong>
-                <span class="feature-sum">${esc(it.summary)}</span>
-                <span class="tile-ex">${esc(it.examples)}</span>
-                <span class="tile-need"><b>Necesitas:</b> ${esc(it.needs)}</span>
-                <span class="feature-go">Abrir →</span>
-            </a>`).join('');
 
         // ---------- Catálogo con filtro por familia ----------
         let fam = 'todas';

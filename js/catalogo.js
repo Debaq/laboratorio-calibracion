@@ -10,21 +10,21 @@
     /** Módulos con página propia. storeId = clave con que guardan sus datos (LabApp id). */
     const MODULES = [
         {
-            id: 'imu', storeId: 'imu', href: 'imu.html', family: 'movimiento', featured: true,
+            id: 'imu', storeId: 'imu', href: 'imu.html', family: 'movimiento',
             name: 'Posturógrafo IMU (ángulo)', examples: 'BNO055, MPU6050, MPU9250, ICM-20948, inclinómetros · 3, 6 y 9 DOF',
             summary: 'Ángulo de la IMU en la barra del posturógrafo: ganancia, offset, acoplamiento entre ejes, flexión de la barra y matriz 3D.',
             needs: 'regla o pie de metro y huincha (referencia geométrica)',
             keywords: 'imu acelerometro giroscopio inclinometro posturografo posturografia pitch roll yaw angulo inclinacion barra'
         },
         {
-            id: 'imucrudo', storeId: 'imucrudo', href: 'imu-crudo.html', family: 'movimiento', featured: true,
+            id: 'imucrudo', storeId: 'imucrudo', href: 'imu-crudo.html', family: 'movimiento',
             name: 'IMU: acelerómetro, giroscopio y magnetómetro', examples: 'MPU6050, MPU9250, ICM-20948, LSM6DS3, ADXL345, L3GD20, QMC5883L, HMC5883L',
             summary: 'Corrige los sensores crudos antes de calcular ángulos: sesgo y escala del acelerómetro, deriva del giroscopio y distorsión magnética.',
             needs: 'superficie nivelada, una caja escuadrada y registro CSV',
             keywords: 'imu crudo acelerometro giroscopio magnetometro brujula compas allan sesgo bias hierro 6dof 9dof'
         },
         {
-            id: 'balanza', storeId: 'balanza', href: 'balanza.html', family: 'fuerza', featured: true,
+            id: 'balanza', storeId: 'balanza', href: 'balanza.html', family: 'fuerza',
             name: 'Posturógrafo de balanza (plataforma de fuerza)', examples: '4 celdas de carga + HX711, plataformas caseras, Wii Balance Board',
             summary: 'Factor de cada celda, exactitud del centro de presión (CoP), ruido de fondo y respuesta dinámica con masa giratoria.',
             needs: 'masas conocidas hasta el peso de una persona; registro CSV para los ensayos dinámicos',

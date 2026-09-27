@@ -1,7 +1,7 @@
 # Laboratorio de Calibración
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
-![Sin dependencias](https://img.shields.io/badge/dependencias-ninguna-brightgreen.svg)
+![Sin compilación](https://img.shields.io/badge/compilación-ninguna-brightgreen.svg)
 ![Funciona sin internet](https://img.shields.io/badge/funciona-sin%20internet-brightgreen.svg)
 
 Guías y herramientas web para que estudiantes **calibren los sensores que se usan con placas de desarrollo** (Arduino, ESP32, Raspberry Pi Pico…):
@@ -13,7 +13,8 @@ Cada módulo:
 1. **Explica** el principio físico, los materiales, el procedimiento y los errores comunes.
 2. **Genera el plan de mediciones** y guía paso a paso: *“Ciclo 2 ↑: lleve el baño a ≈ 40 °C, espere el equilibrio y registre”*.
 3. **Calcula** error, sesgo, repetibilidad, histéresis, no linealidad e **incertidumbre (GUM, k = 2)**, y decide si el sensor **cumple** una tolerancia.
-4. **Entrega** la ecuación de corrección con su código C/Arduino, y un **protocolo de ensayo en PDF** con la hoja de registro para el laboratorio.
+4. **Entrega** la ecuación de corrección con su código C/Arduino, un **protocolo de ensayo en PDF** con la hoja de registro para el laboratorio,
+   y **exportaciones para informes y tesis**: gráficos en PNG (alta resolución) y SVG (vectorial), y datos y tablas en CSV.
 
 La página de inicio es un buscador: escriba el modelo del chip (*MPU6050*, *HX711*, *DS18B20*…) o la magnitud (*temperatura*, *distancia*).
 Cada ficha dice qué referencia o equipo se necesita, y la sección *Continuar* retoma los experimentos en curso.
@@ -80,6 +81,14 @@ El motor ofrece:
 
 <p align="center"><img src="docs/img/sensor-ntc.png" width="820" alt="Calibración de un termistor NTC con Steinhart–Hart y comparación de modelos"></p>
 
+### Exportar para informes y tesis
+
+- **Cada gráfico** tiene botones **PNG** (2560 px de ancho, ≈ 300 ppp a página completa, fondo blanco), **SVG** (vectorial, con título y leyenda,
+  se edita en Inkscape o se inserta en Word/LaTeX sin perder calidad) y **CSV** (los datos exactos del gráfico, para rehacerlo en otro programa).
+  Se exportan siempre con colores de tema claro, aunque la página esté en modo oscuro.
+- En **Resultados**: *Informe (PDF)*, *Datos crudos (CSV)* y *Tablas de resultados (CSV)* (indicadores y todas las tablas, por secciones).
+- Los CSV usan separador `;` y coma decimal: se abren directo en Excel en español.
+
 ### Protocolo de ensayo en PDF
 
 Todos los módulos tienen **Descargar protocolo (PDF)**: datos del grupo, configuración, instrucciones completas y **hoja de registro** con cada acción del plan
@@ -100,6 +109,11 @@ Conformidad:              |error máximo| + U_referencia ≤ tolerancia
 Referencia adecuada:      TUR = tolerancia / U_referencia ≥ 4
 ```
 
+## Fórmulas
+
+Las fórmulas se escriben en LaTeX y se muestran con [KaTeX](https://katex.org) (incluido en `vendor/katex`, así que no necesita internet):
+`\( … \)` en línea y `\[ … \]` en bloque. Las ecuaciones de calibración de los resultados se generan con los coeficientes numéricos.
+
 ## Estructura
 
 ```
@@ -113,16 +127,24 @@ js/core/
   uncertainty.js                 incertidumbre tipo A/B, combinada, expandida
   signal.js                      filtro de fase cero, círculo, elipsoide, Allan, escalón, estabilometría
   csv.js                         lectura tolerante de CSV (monitor serie, Excel)
-  store.js  ui.js  app.js        almacenamiento, gráficos SVG, estructura común de los módulos
+  math.js                        fórmulas con KaTeX
+  store.js  ui.js  app.js        almacenamiento, gráficos SVG y su exportación, estructura común de los módulos
+js/catalogo.js                   catálogo unificado del inicio (módulos + perfiles, búsqueda, “continuar”)
 js/modules/                      *-model.js (matemática pura, testeable) y *-ui.js (interfaz)
 js/perfiles/                     registro y perfiles de sensores del catálogo
 tests/                           pruebas con node:test
+vendor/katex/                    KaTeX (MIT), solo fuentes woff2
+tools/versionar.mjs              versionado de CSS/JS por hash (evita cachés viejas)
+.githooks/pre-commit             ejecuta el versionado en cada commit
 docs/img/                        capturas
 ```
 
 Principios de diseño:
 
-- **Sin dependencias ni compilación**: HTML, CSS y JavaScript con scripts clásicos (no módulos ES), para que funcione abriendo el archivo (`file://`).
+- **Sin compilación ni dependencias externas**: HTML, CSS y JavaScript con scripts clásicos (no módulos ES), para que funcione abriendo el archivo (`file://`).
+  La única biblioteca (KaTeX) va incluida en el repositorio.
+- **Versionado de recursos**: cada `<script>` y `<link>` lleva `?v=<hash del contenido>`. Al publicar una versión nueva, el navegador descarga
+  solo los archivos que cambiaron. Lo actualiza `npm run versionar`, lo ejecuta el hook de git en cada commit, y `npm test` falla si quedó desactualizado.
 - **Solo se guardan datos crudos** (configuración + mediciones); los resultados se recalculan siempre, así que cambiar un parámetro reprocesa todo.
 - **La matemática está separada de la interfaz**: cada `*-model.js` se prueba en Node con datos simulados de parámetros conocidos.
 
@@ -145,10 +167,12 @@ R.register({
 
 El motor se encarga del plan guiado, el análisis, los gráficos, el protocolo PDF y el guardado.
 
-## Pruebas
+## Desarrollo y pruebas
 
 ```bash
-npm test          # o: node --test tests/*.test.js   (Node 18+)
+git config core.hooksPath .githooks   # una vez: versiona CSS/JS automáticamente en cada commit
+npm run versionar                     # actualizar ?v=<hash> a mano
+npm test                              # verifica el versionado y ejecuta las pruebas (Node 18+)
 ```
 
 Las pruebas verifican el núcleo matemático contra valores de tabla (t de Student, F, densidad del agua, gravedad, Anscombe) y que cada modelo
@@ -169,4 +193,4 @@ Con la colaboración de Vanessa Uribe en la versión inicial.
 
 ## Licencia
 
-[MIT](LICENSE) © 2026 Nicolás Baier Quezada
+[MIT](LICENSE) © 2026 Nicolás Baier Quezada. Incluye [KaTeX](https://github.com/KaTeX/KaTeX) (MIT, © Khan Academy y colaboradores), ver `vendor/katex/LICENSE`.

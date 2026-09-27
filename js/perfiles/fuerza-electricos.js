@@ -23,8 +23,7 @@
             { label: 'Cuentas en vacío', value: `${(-fit.coef[0] / fit.coef[1]).toFixed(0)}`, sub: 'cambia en cada encendido: tare() al iniciar' }] : [],
         guide: {
             objetivo: 'Obtener el factor de escala (cuentas/kg), la linealidad, la histéresis y la repetibilidad de una celda de carga con su amplificador.',
-            principio: `<div class="math">N = N₀ + k·m      →     m = (N − N₀) / k
-N₀ (tara) cambia con la temperatura y en cada encendido: en uso se mide al iniciar (tare).</div>
+            principio: `<div class="math">\\[ N = N_0 + k\\,m \\quad\\Longrightarrow\\quad m = \\frac{N - N_0}{k} \\]<p>\\(N_0\\) (tara) cambia con la temperatura y en cada encendido: en uso se mide al iniciar (tare).</p></div>
                 <p>Para la plataforma de 4 celdas del posturógrafo use el módulo <a href="balanza.html">Posturógrafo de balanza</a>.</p>`,
             materiales: ['Celda montada como en su uso final (tornillos apretados, apoyo rígido).', 'Masas de valor conocido (pesadas en balanza de referencia).', 'HX711 con alimentación estable; firmware que imprima cuentas crudas promediadas.'],
             procedimiento: ['Caliente la electrónica 15 min.', 'Registre la lectura en vacío y luego cargue las masas en orden creciente, sin retirar.', 'Descargue en orden inverso (histéresis). Repita 3 ciclos.', 'Aplique la carga siempre en el mismo punto de la celda.'],
@@ -46,8 +45,7 @@ N₀ (tara) cambia con la temperatura y en cada encendido: en uso se mide al ini
         extraWarnings: () => ['Los FSR tienen histéresis y fluencia grandes (10–25 %): sirven para detectar contacto o comparar, no para medir fuerza con exactitud.'],
         guide: {
             objetivo: 'Obtener la curva resistencia → carga del FSR y cuantificar su histéresis y fluencia, que suelen ser el error dominante.',
-            principio: `<div class="math">La conductancia (1/R) es aproximadamente proporcional a la fuerza:
-  R ≈ a · F^(−b)     →     F = e^c₀ · R^c₁   (ley de potencia)</div>
+            principio: `<div class="math"><p>La conductancia \\(1/R\\) es aproximadamente proporcional a la fuerza:</p>\\[ R \\approx a\\,F^{-b} \\quad\\Longrightarrow\\quad F = e^{c_0}\\,R^{c_1} \\quad \\text{(ley de potencia)} \\]</div>
                 <p>La fuerza debe repartirse igual en cada medición: use un disco rígido del tamaño del área activa entre la masa y el sensor.</p>`,
             materiales: ['FSR pegado a una superficie rígida y plana.', 'Disco rígido (goma dura o acrílico) del tamaño del área activa.', 'Masas conocidas.'],
             procedimiento: ['Coloque el disco centrado sobre el área activa.', 'Cargue en orden creciente y luego decreciente, registrando a los 5 s.', 'Repita 3 ciclos. Compare subida y bajada en el gráfico de residuos.'],
@@ -70,8 +68,7 @@ N₀ (tara) cambia con la temperatura y en cada encendido: en uso se mide al ini
         settle: 'Promedie 64 lecturas del ADC.',
         guide: {
             objetivo: 'Obtener la curva cuentas → tensión del conversor analógico-digital de la placa. En el ESP32 es claramente no lineal y tiene zona muerta cerca de 0 V y de 3,3 V.',
-            principio: `<div class="math">ADC ideal:  V = N · Vref / (2ⁿ − 1)
-Real: offset + error de ganancia + no linealidad (ESP32 hasta ±100 mV sin corregir)</div>
+            principio: `<div class="math">\\[ V = N\\,\\frac{V_\\text{ref}}{2^{n} - 1} \\]<p>Real: offset + error de ganancia + no linealidad (ESP32: hasta ±100 mV sin corregir).</p></div>
                 <p>El sistema compara recta y polinomios; el AICc indica si la curvatura es real.</p>`,
             materiales: ['Fuente de tensión ajustable: potenciómetro de 10 kΩ entre 3,3 V y GND, con el cursor al pin ADC.', 'Multímetro de referencia midiendo el mismo pin.', 'Condensador de 100 nF del pin a GND (estabiliza la lectura).'],
             procedimiento: ['Conecte el cursor del potenciómetro al pin ADC y al multímetro.', 'Ajuste cada tensión del plan; registre la lectura del multímetro y el promedio de 64 lecturas ADC.', 'Suba y baje; repita 2 ciclos.'],
@@ -94,7 +91,7 @@ Real: offset + error de ganancia + no linealidad (ESP32 hasta ±100 mV sin corre
             { label: 'Salida a 0 A', value: `${(-fit.coef[0] / fit.coef[1]).toFixed(4)} V`, sub: 'nominal Vcc/2' }] : [],
         guide: {
             objetivo: 'Medir la sensibilidad (mV/A) y la tensión de cero del sensor, ambas proporcionales a su alimentación.',
-            principio: '<div class="math">V = Vcc/2 + S · I      →      I = (V − V₀) / S</div><p>La salida es ratiométrica: si Vcc cambia 2 %, cambian 2 % el cero y la sensibilidad. Mida y registre Vcc.</p>',
+            principio: '<div class="math">\\[ V = \\frac{V_{cc}}{2} + S\\,I \\quad\\Longrightarrow\\quad I = \\frac{V - V_0}{S} \\]</div><p>La salida es ratiométrica: si Vcc cambia 2 %, cambian 2 % el cero y la sensibilidad. Mida y registre Vcc.</p>',
             materiales: ['Fuente de corriente continua con carga resistiva (resistencia de potencia o lámparas).', 'Multímetro en serie como amperímetro (escala 10 A).', 'Multímetro midiendo la salida del sensor.'],
             procedimiento: ['Registre el cero con el circuito abierto.', 'Aumente la corriente por pasos; invierta los cables para las corrientes negativas.', 'Espere a que la resistencia de carga se estabilice térmicamente.'],
             checklist: ['Cables de corriente de calibre adecuado', 'Amperímetro en la escala correcta', 'Sin campos magnéticos cercanos (imanes, motores)'],
@@ -112,7 +109,7 @@ Real: offset + error de ganancia + no linealidad (ESP32 hasta ±100 mV sin corre
         models: ['lineal', 'poly2'], defaultModel: 'lineal', tolerance: 10, range: [0, 1000],
         guide: {
             objetivo: 'Verificar la exactitud del monitor de corriente y corregir el valor de la resistencia shunt configurada.',
-            principio: '<div class="math">I = V_shunt / R_shunt       (R_shunt nominal 0,1 Ω ±1 % → error de ganancia)</div><p>Una ganancia distinta de 1 se corrige ajustando el valor de calibración (registro CAL) o R_shunt en la librería.</p>',
+            principio: '<div class="math">\\[ I = \\frac{V_\\text{shunt}}{R_\\text{shunt}} \\]<p>\\(R_\\text{shunt}\\) nominal 0,1 Ω ±1 % → error de ganancia.</p></div><p>Una ganancia distinta de 1 se corrige ajustando el valor de calibración (registro CAL) o R_shunt en la librería.</p>',
             materiales: ['Fuente y carga ajustable.', 'Multímetro en serie como amperímetro de referencia.'],
             procedimiento: ['Conecte el INA219 y el amperímetro en serie con la carga.', 'Recorra las corrientes del plan subiendo y bajando.', 'Use la ganancia obtenida para corregir R_shunt: R_real = R_nominal / c₁.'],
             checklist: ['Rango del INA configurado para la corriente máxima', 'Conexiones del shunt cortas y firmes'],

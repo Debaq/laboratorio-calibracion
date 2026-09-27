@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Posturógrafo IMU</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -32,29 +33,27 @@
             <h2>Principio: la geometría es la referencia</h2>
             <p>En vez de leer un transportador (resolución típica 1°), se usa una regla o pie de metro para medir el <strong>desplazamiento
                 horizontal d</strong> de un punto de la barra, a distancia <strong>L</strong> del pivote:</p>
-            <div class="math">θ_ref = asin(d / L)
-
-u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
+            <div class="math">\[ \theta_\text{ref} = \arcsin\frac{d}{L} \qquad u^2(\theta) = \left(\frac{u_d}{L\cos\theta}\right)^{2} + \left(\frac{\tan\theta}{L}\,u_L\right)^{2} \]</div>
             <p>Con L = 1000 mm y una regla de 1 mm, u(θ) ≈ 0,02°. Es <strong>50 veces mejor que el transportador</strong>.
                 Mientras más larga sea L, mejor es la referencia. Para giros en <em>yaw</em> se usa la <strong>cuerda</strong>
-                c recorrida a un radio r: <code>θ = 2·asin(c / 2r)</code>, o un goniómetro/plato giratorio (método directo).</p>
+                c recorrida a un radio r: \(\theta = 2\arcsin\frac{c}{2r}\), o un goniómetro/plato giratorio (método directo).</p>
 
             <h3>El cero de cada ciclo</h3>
             <p>El IMU nunca queda montado perfectamente alineado: en reposo puede marcar, por ejemplo, pitch = 1,2°. Por eso se registra un
-                <strong>cero</strong> al inicio y al final de cada ciclo, y se analiza el cambio <code>Δ = lectura − cero</code>. La diferencia entre el cero
+                <strong>cero</strong> al inicio y al final de cada ciclo, y se analiza el cambio \(\Delta = \text{lectura} - \text{cero}\). La diferencia entre el cero
                 final y el inicial es la <strong>deriva</strong>.</p>
 
             <h3>Acoplamiento entre ejes</h3>
             <p>Si se inclina solo en pitch, roll y yaw deberían quedarse quietos. Si cambian proporcionalmente, el sensor está girado respecto
-                de la barra. La pendiente <code>c = ΔRoll / θ_pitch</code> es el acoplamiento, y <code>atan(c)</code> es aproximadamente el ángulo de desalineación.</p>
+                de la barra. La pendiente \(c = \Delta_\text{roll}/\theta_\text{pitch}\) es el acoplamiento, y \(\arctan c\) es aproximadamente el ángulo de desalineación.</p>
 
             <h3>Flexión de la barra (opcional)</h3>
             <p>Con la barra vertical, el peso del sensor y del láser es axial: no la dobla. Al inclinarla un ángulo θ, la componente
-                <code>F⊥ = m·g·sin θ</code> la curva como un voladizo, y el IMU ve un ángulo algo mayor que el del pivote:</p>
-            <div class="math">φ(x) = F⊥ · x (2L − x) / (2 EI)     giro extra en la posición x del sensor
-δ(x) = F⊥ · x² (3L − x) / (6 EI)    desplazamiento lateral extra</div>
-            <p>La rigidez <code>EI</code> se mide una vez con un ensayo de 3 puntos (barra horizontal sobre dos apoyos, carga en el medio):
-                <code>δ = F·a²·b² / (3·EI·L<sub>s</sub>)</code>. Si la barra es rígida (metal, de más de 15 mm de diámetro) el efecto suele ser menor a 0,05° y se puede omitir.</p>
+                \(F_\perp = m\,g\sin\theta\) la curva como un voladizo, y el IMU ve un ángulo algo mayor que el del pivote:</p>
+            <div class="math">\[ \varphi(x) = \frac{F_\perp\,x\,(2L - x)}{2\,EI} \qquad \delta(x) = \frac{F_\perp\,x^{2}\,(3L - x)}{6\,EI} \]
+                <p>\(\varphi\): giro extra en la posición \(x\) del sensor · \(\delta\): desplazamiento lateral extra</p></div>
+            <p>La rigidez \(EI\) se mide una vez con un ensayo de 3 puntos (barra horizontal sobre dos apoyos, carga en el medio):
+                \(\delta = \frac{F\,a^{2} b^{2}}{3\,EI\,L_s}\). Si la barra es rígida (metal, de más de 15 mm de diámetro) el efecto suele ser menor a 0,05° y se puede omitir.</p>
 
             <h2>Materiales</h2>
             <ul>
@@ -224,11 +223,8 @@ u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
         <!-- ================= MULTI-EJE ================= -->
         <section class="panel" id="tab-multi" hidden>
             <div class="callout">Combine experimentos <strong>guardados</strong> de distintos ejes para obtener la matriz de sensibilidad 3×3 y su inversa (la corrección).</div>
-            <div class="math">Δ = A · θ + a         (Δ: cambios leídos por el IMU;  θ: ángulos verdaderos)
-θ = C · (Δ − a),   C = A⁻¹
-
-A[i][j] = pendiente del eje i cuando se mueve SOLO el eje j
-diagonal → ganancias     fuera de la diagonal → acoplamientos</div>
+            <div class="math">\[ \boldsymbol{\Delta} = \mathbf{A}\,\boldsymbol{\theta} + \mathbf{a} \qquad\Longrightarrow\qquad \boldsymbol{\theta} = \mathbf{C}\,(\boldsymbol{\Delta} - \mathbf{a}),\quad \mathbf{C} = \mathbf{A}^{-1} \]
+                <p>\(\boldsymbol\Delta\): cambios leídos por el IMU · \(\boldsymbol\theta\): ángulos verdaderos · \(A_{ij}\): pendiente del eje \(i\) cuando se mueve solo el eje \(j\) (diagonal = ganancias, fuera de la diagonal = acoplamientos)</p></div>
             <div class="card"><div class="grid three" id="multi-selects"></div>
                 <div class="actions"><button type="button" class="primary" id="multi-run">Calcular matriz</button></div></div>
             <div id="multi-out"></div>
@@ -238,14 +234,17 @@ diagonal → ganancias     fuera de la diagonal → acoplamientos</div>
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/imu-model.js"></script>
-    <script src="js/modules/imu-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/imu-model.js?v=330789dc"></script>
+    <script src="js/modules/imu-ui.js?v=6b77ff8d"></script>
 </body>
 </html>

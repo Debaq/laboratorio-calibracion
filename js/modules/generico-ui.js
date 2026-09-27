@@ -230,9 +230,9 @@
             </div>
             ${a.warningsHtml(res.warnings)}
             <div class="card"><h3>Ecuación de calibración — ${esc(f.label)}</h3>
-                <div class="math">${esc(f.eq)}
-x = ${esc(xm.xLabel || (profile.labels ? L.reading : profile.reading.label))} [${esc(xUnit)}]   →   y = ${esc(L.quantity)} [${esc(un)}]
-válida para ${sig(m.xmin, 5)} ≤ x ≤ ${sig(m.xmax, 5)} ${esc(xUnit)}</div>
+                <div class="math">${window.LabMath.tex(G.MODELS[f.id].tex, true)}${window.LabMath.tex(G.MODELS[f.id].texNum(f.coef, G.texNum), true)}
+                    <p>\\(x\\) = ${esc(xm.xLabel || (profile.labels ? L.reading : profile.reading.label))} [${esc(xUnit)}] · \\(y\\) = ${esc(L.quantity)} [${esc(un)}]${f.id === 'beta' || f.id === 'steinhart' ? ' · T en kelvin' : ''}.
+                    Válida para ${sig(m.xmin, 5)} ≤ x ≤ ${sig(m.xmax, 5)} ${esc(xUnit)}.</p></div>
                 ${table(['Coeficiente', 'Valor', 'Error estándar'], f.coef.map((c, i) => [f.names[i], sig(c, 7), sig(f.se[i], 3)]))}
                 <details><summary>Código para Arduino / C</summary><pre>${esc(G.codeFor(f, profile, cfg, m.xmin, m.xmax))}</pre></details>
             </div>

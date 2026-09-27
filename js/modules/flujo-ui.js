@@ -128,9 +128,12 @@
     function renderResults(el, cfg, rows, res) {
         const m = res.metrics;
         const cName = isV ? 'C<sub>d</sub>' : 'C';
+        const N = window.LabMath.num, T = window.LabMath.tex;
         const eq = isV
-            ? `Q [L/min] = ${sig(m.K, 5)} · √ΔP[Pa]\n\nQ = C_d · A₂ · √(2ΔP / (ρ(1 − β⁴)))   con C_d = ${fmt(m.C, 4)}, β = ${fmt(m.beta, 4)}, ρ = ${fmt(res.fluid.rho, 4)} kg/m³`
-            : `v [m/s] = ${sig(m.K, 5)} · √ΔP[Pa]\n\nv = C · √(2ΔP / ρ)   con C = ${fmt(m.C, 4)}, ρ = ${fmt(res.fluid.rho, 4)} kg/m³`;
+            ? T(`Q\\,[\\mathrm{L/min}] = ${N(m.K, 5)}\\,\\sqrt{\\Delta P\\,[\\mathrm{Pa}]}`, true)
+              + T(`Q = C_d\\,A_2\\sqrt{\\frac{2\\,\\Delta P}{\\rho\\,(1-\\beta^{4})}} \\qquad C_d = ${N(m.C, 4)},\\ \\beta = ${N(m.beta, 4)},\\ \\rho = ${N(res.fluid.rho, 4)}\\ \\mathrm{kg/m^3}`, true)
+            : T(`v\\,[\\mathrm{m/s}] = ${N(m.K, 5)}\\,\\sqrt{\\Delta P\\,[\\mathrm{Pa}]}`, true)
+              + T(`v = C\\sqrt{\\frac{2\\,\\Delta P}{\\rho}} \\qquad C = ${N(m.C, 4)},\\ \\rho = ${N(res.fluid.rho, 4)}\\ \\mathrm{kg/m^3}`, true);
         el.innerHTML = `
             <h2>Resultado: ${esc(cfg.name)}</h2>
             <div class="kpis">
@@ -141,7 +144,7 @@
                 ${cfg.fluid === 'aire' ? kpi('Mach máx.', fmt(m.machMax, 3), m.machMax < 0.3 ? 'incompresible OK' : 'compresible', m.machMax < 0.3 ? '' : 'bad') : ''}
             </div>
             ${app.warningsHtml(res.warnings)}
-            <div class="card"><h3>Ecuación de uso</h3><div class="math">${esc(eq)}</div>
+            <div class="card"><h3>Ecuación de uso</h3><div class="math">${eq}</div>
                 <p class="muted small">Válida en el rango de Reynolds medido. Para usarla, convierta primero la salida del sensor en ΔP con la ecuación de calibración de presión.</p></div>
             <div class="plots"><div id="p1"></div><div id="p2"></div><div id="p3"></div></div>
             <div class="card"><h3>Puntos</h3>

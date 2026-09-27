@@ -1,0 +1,7 @@
+#!/bin/sh
+# Antes de cada commit: actualiza los ?v=<hash> de CSS/JS en los HTML y los agrega al commit.
+changed=$(node tools/versionar.mjs) || exit 1
+if [ -n "$changed" ]; then
+    echo "versionar: actualizados $(echo "$changed" | tr '\n' ' ')"
+    git add $changed
+fi

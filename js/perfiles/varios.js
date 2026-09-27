@@ -23,7 +23,7 @@
         settle: 'Espere 10 s (el LDR es lento, sobre todo al pasar de luz a oscuridad).',
         guide: {
             objetivo: 'Obtener la curva R → iluminancia del LDR, que sigue una ley de potencia, y ver su histéresis (memoria de la luz previa).',
-            principio: '<div class="math">R ≈ R₁₀ · (E/10 lx)^(−γ)      (γ ≈ 0,6–0,9)      →   E = e^c₀ · R^c₁</div><p>En escala log–log es una recta. El LDR es sensible a la temperatura y responde en decenas de ms a segundos.</p>',
+            principio: '<div class="math">\\[ R \\approx R_{10}\\left(\\frac{E}{10\\ \\mathrm{lx}}\\right)^{-\\gamma} \\quad (\\gamma \\approx 0{,}6\\text{–}0{,}9) \\quad\\Longrightarrow\\quad E = e^{c_0}\\,R^{c_1} \\]</div><p>En escala log–log es una recta. El LDR es sensible a la temperatura y responde en decenas de ms a segundos.</p>',
             procedimiento: ['Oscurezca la sala; ubique LDR y luxómetro juntos frente a la lámpara.', 'Recorra los niveles del plan subiendo y bajando la luz.', 'Registre lux de referencia y resistencia/cuentas.'],
             ...LUX_COMMON
         },
@@ -38,7 +38,7 @@
         models: ['lineal', 'proporcional'], defaultModel: 'lineal', tolerance: 30, range: [10, 1000],
         guide: {
             objetivo: 'Medir el error de escala del sensor digital. El BH1750 declara una “exactitud de medición” de 1,2 ±20 %: la corrección de ganancia es casi siempre necesaria.',
-            principio: '<div class="math">E_real = c₀ + c₁ · E_sensor       (c₁ ≈ 1 si el factor 1,2 del BH1750 es correcto para su luz)</div>',
+            principio: '<div class="math">\\[ E_\\text{real} = c_0 + c_1\\,E_\\text{sensor} \\]<p>\\(c_1 \\approx 1\\) si el factor 1,2 del BH1750 es correcto para su luz.</p></div>',
             procedimiento: ['Ubique sensor y luxómetro juntos.', 'Recorra los niveles del plan.', 'Use c₁ como factor de corrección en el firmware.'],
             ...LUX_COMMON
         },
@@ -57,7 +57,7 @@
         settle: 'Promedie 16 lecturas.',
         guide: {
             objetivo: 'Obtener la relación cuentas → ángulo de un potenciómetro usado como goniómetro electrónico (articulaciones, pedales, palancas).',
-            principio: '<div class="math">θ = c₀ + c₁ · N       (pistas lineales; los potenciómetros "de audio" son logarítmicos)</div><p>La no linealidad de la pista (±1–3 %) y el juego mecánico del eje se ven en los residuos y la histéresis.</p>',
+            principio: '<div class="math">\\[ \\theta = c_0 + c_1\\,N \\]<p>Pistas lineales; los potenciómetros “de audio” son logarítmicos.</p></div><p>La no linealidad de la pista (±1–3 %) y el juego mecánico del eje se ven en los residuos y la histéresis.</p>',
             materiales: ['Transportador o goniómetro fijo al eje.', 'Indicador (aguja) solidario al eje.', 'Firmware que promedie lecturas ADC.'],
             procedimiento: ['Alinee el cero del transportador con la posición neutra.', 'Lleve el eje a cada ángulo del plan sin pasarse; registre.', 'Suba y baje (el juego mecánico aparece como histéresis).'],
             checklist: ['Eje sin juego respecto del transportador', 'Tensión de alimentación del potenciómetro = Vref del ADC'],
@@ -76,7 +76,7 @@
         extraWarnings: () => ['El sensor de flexión mide curvatura, no ángulo: la lectura depende del radio de curvatura y de dónde se dobla. Calibre montado igual que en el uso (dedo, articulación).'],
         guide: {
             objetivo: 'Obtener la curva resistencia → ángulo del sensor de flexión montado como en su uso, y cuantificar su gran histéresis.',
-            principio: '<div class="math">R = R₀ + a·θ + b·θ²      (aproximadamente; depende del radio de curvatura)</div>',
+            principio: '<div class="math">\\[ R \\approx R_0 + a\\,\\theta + b\\,\\theta^{2} \\]<p>Aproximado: depende del radio de curvatura.</p></div>',
             materiales: ['Bisagra o articulación de prueba con transportador.', 'Sensor fijado en un solo extremo y guiado (debe poder deslizar).'],
             procedimiento: ['Monte el sensor sobre la bisagra como irá en el uso final.', 'Recorra los ángulos subiendo y bajando; registre a los 3 s.', 'Repita 3 ciclos.'],
             checklist: ['Sensor fijo en un extremo, libre en el otro', 'Mismo radio de curvatura que en el uso'],
@@ -122,8 +122,7 @@
         },
         guide: {
             objetivo: 'Calibrar el electrodo de pH con buffers y evaluar su estado mediante la pendiente (eficiencia de Nernst) y el offset.',
-            principio: `<div class="math">Ecuación de Nernst:  E = E₀ + S·(pH − 7)      S = −0,19842·(T + 273,15) mV/pH
-25 °C → −59,16 mV/pH       Eficiencia = S_medida / S_Nernst  (95–102 % = electrodo sano)</div>
+            principio: `<div class="math">\\[ E = E_0 + S\\,(\\mathrm{pH} - 7) \\qquad S = -0{,}19842\\,(T + 273{,}15)\\ \\mathrm{mV/pH} \\]\\[ \\text{eficiencia} = \\frac{S_\\text{medida}}{S_\\text{Nernst}} \\]<p>A 25 °C, \\(S = -59{,}16\\) mV/pH. Eficiencia entre 95 y 102 % = electrodo sano.</p></div>
                 <p>El electrodo tiene impedancia de ~100 MΩ: un multímetro común (10 MΩ) NO sirve para medir su potencial; use un módulo con amplificador o un ADS1115 con buffer.</p>`,
             materiales: ['Buffers pH 4, 7 y 10 frescos (no reutilice el buffer).', 'Agua destilada, vasos limpios, papel absorbente.', 'Termómetro.'],
             procedimiento: ['Hidrate el electrodo según el fabricante (solución de KCl).', 'Siga el plan: enjuague entre buffers, lecturas estables, 3 por buffer.', 'Anote la temperatura y el pH del buffer a esa temperatura (etiqueta).', 'Revise pendiente y offset: indican si el electrodo está sano.'],
@@ -153,8 +152,7 @@
         models: ['poly2', 'lineal', 'poly3'], defaultModel: 'poly2', tolerance: 3, range: [5, 45],
         guide: {
             objetivo: 'Obtener la curva cuentas → contenido de agua para SU suelo. La curva de fábrica (si existe) solo vale para un suelo estándar.',
-            principio: `<div class="math">Contenido gravimétrico:  w  = (m_húmeda − m_seca) / m_seca
-Contenido volumétrico:   θv = w · ρ_aparente / ρ_agua      (en %)</div>
+            principio: `<div class="math">\\[ w = \\frac{m_\\text{húmeda} - m_\\text{seca}}{m_\\text{seca}} \\qquad \\theta_v = w\\,\\frac{\\rho_\\text{aparente}}{\\rho_\\text{agua}} \\]<p>\\(w\\): contenido gravimétrico · \\(\\theta_v\\): contenido volumétrico (en %).</p></div>
                 <p>El sensor capacitivo mide la permitividad del suelo, que depende del agua, pero también de la textura, la sal y la compactación.</p>`,
             materiales: ['Suelo del sitio de uso, tamizado y secado al aire.', 'Balanza (0,1 g), cilindro de volumen conocido, horno a 105 °C (o microondas con cuidado).', 'Recipientes rotulados.'],
             procedimiento: ['Prepare 5 porciones con cantidades crecientes de agua; mezcle y deje reposar 1 h tapadas.', 'Compacte cada porción en un recipiente de forma parecida al terreno.', 'Inserte el sensor 3 veces en distintos lugares (repeticiones).', 'Tome muestras con el cilindro, pese húmedas, seque y pese secas.'],
@@ -194,7 +192,7 @@ Contenido volumétrico:   θv = w · ρ_aparente / ρ_agua      (en %)</div>
         },
         guide: {
             objetivo: 'Obtener el factor K (pulsos por litro) del caudalímetro y verificar si cambia con el caudal.',
-            principio: '<div class="math">V = N / K        Q = f / K   (f = frecuencia de pulsos)\nYF-S201: f [Hz] ≈ 7,5 · Q [L/min]   →   K ≈ 450 pulsos/L</div><p>A caudales bajos la turbina resbala y K baja: por eso se prueban varios caudales.</p>',
+            principio: '<div class="math">\\[ V = \\frac{N}{K} \\qquad Q = \\frac{f}{K} \\]<p>\\(f\\): frecuencia de pulsos. YF-S201: \\(f\\,[\\mathrm{Hz}] \\approx 7{,}5\\,Q\\,[\\mathrm{L/min}]\\), es decir \\(K \\approx 450\\) pulsos/L.</p></div><p>A caudales bajos la turbina resbala y K baja: por eso se prueban varios caudales.</p>',
             materiales: ['Sensor en una línea con válvula, sin aire atrapado.', 'Recipiente y balanza (o probeta de 1 L).', 'Cronómetro; firmware que cuente pulsos por interrupción.'],
             procedimiento: ['Purgue el aire de la línea.', 'Para cada posición de válvula: contador en cero, recolecte ~1 L, registre pulsos, volumen y tiempo.', 'Repita 3 veces por caudal.'],
             checklist: ['Sensor en posición indicada por la flecha', 'Sin burbujas', 'Conteo por interrupción (no en loop con delays)'],
@@ -225,10 +223,7 @@ Contenido volumétrico:   θv = w · ρ_aparente / ρ_agua      (en %)</div>
         timeResponse: true,
         guide: {
             objetivo: 'Calibrar cualquier sensor comparando su lectura con una referencia conocida en varios puntos del rango de uso.',
-            principio: `<div class="math">1. Elegir una referencia al menos 4 veces más exacta que la tolerancia buscada.
-2. Medir en 5 o más puntos que cubran TODO el rango de uso, subiendo y bajando, en 2–3 ciclos.
-3. Ajustar la curva (el sistema compara modelos por AICc) y revisar los residuos.
-4. Declarar el error, la incertidumbre (k = 2) y el rango válido de la ecuación.</div>`,
+            principio: `<div class="math"><ol><li>Elegir una referencia al menos 4 veces más exacta que la tolerancia buscada.</li><li>Medir en 5 o más puntos que cubran <strong>todo</strong> el rango de uso, subiendo y bajando, en 2–3 ciclos.</li><li>Ajustar la curva (el sistema compara modelos por AICc) y revisar los residuos.</li><li>Declarar el error, la incertidumbre (\\(k = 2\\)) y el rango válido de la ecuación.</li></ol></div>`,
             materiales: ['Sensor montado como en su uso final.', 'Referencia (instrumento calibrado o patrón físico).', 'Forma de fijar la magnitud en valores estables (baño, fuente, masas, etc.).'],
             procedimiento: ['Escriba en la Preparación qué magnitud mide y en qué unidades.', 'Defina los niveles para cubrir el rango de uso.', 'Siga el plan registrando referencia y lectura.', 'Revise la comparación de modelos y los residuos antes de elegir la ecuación.'],
             checklist: ['Referencia con incertidumbre conocida', 'Rango de uso cubierto', 'Condiciones ambientales anotadas'],

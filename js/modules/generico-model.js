@@ -26,49 +26,71 @@
     const K0 = 273.15;
     const pos = v => v > 0;
 
+    /** Número en formato LaTeX con coma decimal (y ×10ⁿ si es muy grande o pequeño). */
+    function texNum(x, digits = 6) {
+        if (!isFinite(x)) return '\\text{—}';
+        const a = Math.abs(x);
+        if (a !== 0 && (a >= 1e5 || a < 1e-3)) {
+            const [m, e] = x.toExponential(digits - 1).split('e');
+            return `${String(+m).replace('.', '{,}')}\\times10^{${+e}}`;
+        }
+        return (+x.toPrecision(digits)).toString().replace('.', '{,}');
+    }
+    /** Término "+ c·base" con el signo correcto. */
+    const t = (c, base) => ` ${c < 0 ? '-' : '+'} ${texNum(Math.abs(c))}\\,${base}`;
+
     // ---------------- Modelos ----------------
     const MODELS = {
         lineal: {
+            tex: 'y = c_0 + c_1\\,x', texNum: (c, n) => `y = ${n(c[0])}${t(c[1], 'x')}`,
             label: 'Lineal', eq: 'y = c₀ + c₁·x', names: ['c₀', 'c₁'],
             basis: x => [1, x], g: y => y, gi: t => t, dgi: () => 1,
             code: c => `return ${c[0]} + ${c[1]} * x;`
         },
         proporcional: {
+            tex: 'y = c_1\\,x', texNum: (c, n) => `y = ${n(c[0])}\\,x`,
             label: 'Proporcional (por el origen)', eq: 'y = c₁·x', names: ['c₁'],
             basis: x => [x], g: y => y, gi: t => t, dgi: () => 1,
             code: c => `return ${c[0]} * x;`
         },
         poly2: {
+            tex: 'y = c_0 + c_1 x + c_2 x^{2}', texNum: (c, n) => `y = ${n(c[0])}${t(c[1], 'x')}${t(c[2], 'x^{2}')}`,
             label: 'Polinomio grado 2', eq: 'y = c₀ + c₁·x + c₂·x²', names: ['c₀', 'c₁', 'c₂'],
             basis: x => [1, x, x * x], g: y => y, gi: t => t, dgi: () => 1,
             code: c => `return ${c[0]} + x * (${c[1]} + x * ${c[2]});`
         },
         poly3: {
+            tex: 'y = c_0 + c_1 x + c_2 x^{2} + c_3 x^{3}', texNum: (c, n) => `y = ${n(c[0])}${t(c[1], 'x')}${t(c[2], 'x^{2}')}${t(c[3], 'x^{3}')}`,
             label: 'Polinomio grado 3', eq: 'y = c₀ + c₁·x + c₂·x² + c₃·x³', names: ['c₀', 'c₁', 'c₂', 'c₃'],
             basis: x => [1, x, x * x, x * x * x], g: y => y, gi: t => t, dgi: () => 1,
             code: c => `return ${c[0]} + x * (${c[1]} + x * (${c[2]} + x * ${c[3]}));`
         },
         log: {
+            tex: 'y = c_0 + c_1 \\ln x', texNum: (c, n) => `y = ${n(c[0])}${t(c[1], '\\ln x')}`,
             label: 'Logarítmico', eq: 'y = c₀ + c₁·ln(x)', names: ['c₀', 'c₁'],
             basis: x => [1, Math.log(x)], g: y => y, gi: t => t, dgi: () => 1, xOk: pos,
             code: c => `return ${c[0]} + ${c[1]} * log(x);`
         },
         potencia: {
+            tex: 'y = e^{c_0}\\,x^{c_1}', texNum: (c, n) => `y = ${n(Math.exp(c[0]))}\\,x^{${n(c[1])}}`,
             label: 'Potencia', eq: 'y = e^c₀ · x^c₁   (ln y = c₀ + c₁·ln x)', names: ['c₀', 'c₁'],
             basis: x => [1, Math.log(x)], g: y => Math.log(y), gi: t => Math.exp(t), dgi: t => Math.exp(t), xOk: pos, yOk: pos,
             code: c => `return exp(${c[0]} + ${c[1]} * log(x));`
         },
         inverso: {
+            tex: 'y = c_0 + \\frac{c_1}{x}', texNum: (c, n) => `y = ${n(c[0])} ${c[1] < 0 ? '-' : '+'} \\frac{${n(Math.abs(c[1]))}}{x}`,
             label: 'Inverso', eq: 'y = c₀ + c₁ / x', names: ['c₀', 'c₁'],
             basis: x => [1, 1 / x], g: y => y, gi: t => t, dgi: () => 1, xOk: x => x !== 0,
             code: c => `return ${c[0]} + ${c[1]} / x;`
         },
         beta: {
+            tex: '\\frac{1}{T} = c_0 + c_1 \\ln R', texNum: (c, n) => `\\frac{1}{T} = ${n(c[0])}${t(c[1], '\\ln R')}`,
             label: 'Termistor Beta', eq: '1/T = c₀ + c₁·ln(R)   (T en K;  B = 1/c₁)', names: ['c₀', 'c₁'],
             basis: x => [1, Math.log(x)], g: y => 1 / (y + K0), gi: t => 1 / t - K0, dgi: t => -1 / (t * t), xOk: pos,
             code: c => `float L = log(x);\n  return 1.0 / (${c[0]} + ${c[1]} * L) - 273.15;`
         },
         steinhart: {
+            tex: '\\frac{1}{T} = c_0 + c_1 \\ln R + c_3 (\\ln R)^{3}', texNum: (c, n) => `\\frac{1}{T} = ${n(c[0])}${t(c[1], '\\ln R')}${t(c[2], '(\\ln R)^{3}')}`,
             label: 'Steinhart–Hart', eq: '1/T = c₀ + c₁·ln(R) + c₃·ln(R)³   (T en K)', names: ['c₀', 'c₁', 'c₃'],
             basis: x => { const l = Math.log(x); return [1, l, l * l * l]; }, g: y => 1 / (y + K0), gi: t => 1 / t - K0, dgi: t => -1 / (t * t), xOk: pos,
             code: c => `float L = log(x);\n  return 1.0 / (${c[0]} + ${c[1]} * L + ${c[2]} * L * L * L) - 273.15;`
@@ -337,5 +359,5 @@ float calibrar(float x) {
         return { profile, mode, defaultConfig, buildPlan, analyze, points, xOf, yOf, timeResponse, exampleData, exampleStep, levelLabel, modes, refs };
     }
 
-    return { MODELS, fitModel, codeFor, create };
+    return { MODELS, fitModel, codeFor, create, texNum };
 });

@@ -160,8 +160,8 @@
             ${app.warningsHtml(res.warnings)}
             <div class="card">
                 <h3>Ecuación de corrección</h3>
-                <div class="math">${esc(M.correctionFormula(res, cfg.axis))}
-Δ = lectura − lectura en posición neutra (tomar el cero al iniciar cada sesión)</div>
+                <div class="math">${window.LabMath.tex(`\\theta_\\text{${cfg.axis}} = \\frac{\\Delta_\\text{${cfg.axis}} ${m.offset < 0 ? '+' : '-'} ${window.LabMath.num(Math.abs(m.offset), 4)}^{\\circ}}{${window.LabMath.num(m.gain, 5)}}`, true)}
+                    <p>\\(\\Delta\\) = lectura − lectura en posición neutra (tome el cero al iniciar cada sesión).</p></div>
                 <p class="muted small">Con la corrección, la incertidumbre baja de ${fmt(m.U_raw, 3)}° a ${fmt(m.U_corr, 3)}° (k = 2).
                     Si la ganancia no difiere significativamente de 1, basta con restar el cero.</p>
             </div>

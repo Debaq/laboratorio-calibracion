@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMU: sensores crudos</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -42,11 +43,9 @@
 
             <h2>1 · Acelerómetro: método de 6 posiciones</h2>
             <p>En reposo el acelerómetro mide solo la gravedad (1 g hacia arriba). Poniendo cada eje hacia arriba y hacia abajo se obtiene todo el modelo de error, sin equipos:</p>
-            <div class="math">lectura = S · a + b          a = ±g·eᵢ en cada posición
-
-columna i de S = (L(+i) − L(−i)) / (2g)      → escala (diagonal) y desalineación (fuera de la diagonal)
-b              = (L(+i) + L(−i)) / 2         → sesgo (3 estimaciones que deben coincidir)
-corrección:    a = S⁻¹ · (lectura − b)</div>
+            <div class="math">\[ \mathbf{L} = \mathbf{S}\,\mathbf{a} + \mathbf{b} \qquad \mathbf{a} = \pm g\,\mathbf{e}_i \ \text{en cada posición} \]
+                \[ \mathbf{S}_{:,i} = \frac{\mathbf{L}(+i) - \mathbf{L}(-i)}{2g} \qquad \mathbf{b} = \frac{\mathbf{L}(+i) + \mathbf{L}(-i)}{2} \qquad \mathbf{a} = \mathbf{S}^{-1}(\mathbf{L} - \mathbf{b}) \]
+                <p>Diagonal de \(\mathbf S\): escala · fuera de la diagonal: desalineación · \(\mathbf b\): sesgo (3 estimaciones que deben coincidir)</p></div>
             <p>g se calcula con la latitud (Valdivia 9,8015 m/s²). Use una caja o bloque bien escuadrado como apoyo y una superficie nivelada: un desnivel de 1° equivale a 0,017 g.</p>
 
             <h2>2 · Giroscopio</h2>
@@ -56,12 +55,13 @@ corrección:    a = S⁻¹ · (lectura − b)</div>
                 <li><strong>Giro de ángulo conocido</strong>: gire la placa exactamente 360° (o 90° contra una escuadra) alrededor de un eje, partiendo y terminando quieta.
                     La integral de la velocidad, menos el sesgo, debe dar el ángulo: la diferencia es el error de escala.</li>
             </ul>
-            <div class="math">θ_medido = ∫ (ω − sesgo) dt          error de escala = θ_medido / θ_verdadero − 1</div>
+            <div class="math">\[ \theta_\text{medido} = \int (\omega - \text{sesgo})\,dt \qquad \text{error de escala} = \frac{\theta_\text{medido}}{\theta_\text{verdadero}} - 1 \]</div>
 
             <h2>3 · Magnetómetro: hierro duro y blando</h2>
             <p>Girando el sensor en todas direcciones, el campo terrestre (constante) debería dibujar una esfera centrada en 0. Los imanes y pistas cercanas la
                 <strong>desplazan</strong> (hierro duro) y los metales ferromagnéticos la <strong>deforman</strong> en elipsoide (hierro blando). Se ajusta el elipsoide y se corrige:</p>
-            <div class="math">m_corregido = W · (m_crudo − C)        C = centro (hierro duro),  W = deformación inversa (hierro blando)</div>
+            <div class="math">\[ \mathbf{m}_\text{corregido} = \mathbf{W}\,(\mathbf{m}_\text{crudo} - \mathbf{c}) \]
+                <p>\(\mathbf c\): centro (hierro duro) · \(\mathbf W\): deformación inversa (hierro blando)</p></div>
             <p><strong>Calibre el magnetómetro montado en su lugar final</strong>: la corrección incluye los metales de SU montaje.</p>
 
             <h2>Registro de datos (CSV)</h2>
@@ -179,16 +179,19 @@ void loop() {
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/signal.js"></script>
-    <script src="js/core/csv.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/imucrudo-model.js"></script>
-    <script src="js/modules/imucrudo-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/signal.js?v=e0ab2496"></script>
+    <script src="js/core/csv.js?v=959a20b6"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/imucrudo-model.js?v=28e1f7f1"></script>
+    <script src="js/modules/imucrudo-ui.js?v=5bf33304"></script>
 </body>
 </html>

@@ -77,9 +77,9 @@
 
     function renderResults(el, cfg, rows, res) {
         const m = res.metrics, u = cfg.sensor.outputUnit;
-        const eq = m.deg === 2
-            ? `ΔP [Pa] = ${sig(m.coef[0], 6)} + ${sig(m.coef[1], 6)}·V + ${sig(m.coef[2], 6)}·V²`
-            : `ΔP [Pa] = ${sig(m.coef[0], 6)} + ${sig(m.coef[1], 6)}·V`;
+        const N = window.LabMath.num, T = window.LabMath.tex;
+        const term = (c, b) => ` ${c < 0 ? '-' : '+'} ${N(Math.abs(c))}\\,${b}`;
+        const eqTex = `\\Delta P\\,[\\mathrm{Pa}] = ${N(m.coef[0])}${term(m.coef[1], 'V')}${m.deg === 2 ? term(m.coef[2], 'V^{2}') : ''}`;
         el.innerHTML = `
             <h2>Resultado: ${esc(cfg.sensor.model)}</h2>
             <div class="kpis">
@@ -95,8 +95,7 @@
             </div>
             ${app.warningsHtml(res.warnings)}
             <div class="card"><h3>Ecuación de calibración</h3>
-                <div class="math">${esc(eq)}
-válida para ${fmt(m.Vmin, 3)} ≤ V ≤ ${fmt(m.Vmax, 3)} ${esc(u)}</div>
+                <div class="math">${T(eqTex, true)}<p>Válida para ${fmt(m.Vmin, 3)} ≤ V ≤ ${fmt(m.Vmax, 3)} ${esc(u)}.</p></div>
                 ${table(['Coeficiente', 'Valor', 'Error estándar'], m.coef.map((c, i) => [`c${i}`, sig(c, 6), sig(m.se[i], 3)]))}
                 <p class="muted small">Prueba F (grado 2 vs 1): ${isFinite(res.ftest.p) ? `p = ${sig(res.ftest.p, 2)} → ${res.ftest.p < 0.05 ? 'la curvatura es significativa' : 'la recta basta'}` : 'no aplica'}.
                     ρ agua = ${fmt(m.rhoW, 3)} kg/m³, g = ${fmt(m.g, 5)} m/s².</p>

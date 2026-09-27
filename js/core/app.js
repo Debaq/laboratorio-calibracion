@@ -79,6 +79,7 @@
             if (name === 'resultados') renderResults();
             if (name === 'guardados') renderSaved();
             spec.onTab && spec.onTab(name, app);
+            root.LabMath && root.LabMath.render($(`#tab-${name}`));
             try { history.replaceState(null, '', `#${name}`); } catch (e) { /* file:// en algunos navegadores */ }
             window.scrollTo({ top: 0 });
         }
@@ -249,6 +250,7 @@
             el.innerHTML = head + `<div id="res-body"></div>
                 <details class="card"><summary>Datos crudos (${app.rows.length})</summary>${rowsTable(true)}</details>`;
             spec.renderResults($('#res-body'), app.cfg, app.rows, res, app);
+            root.LabMath && root.LabMath.render(el);
         }
 
         function warningsHtml(ws, blocking = false) {
@@ -454,6 +456,21 @@
             $$('[data-action=example]').forEach(b => b.addEventListener('click', loadExample));
             $$('[data-action=print]').forEach(b => b.addEventListener('click', () => { clearProtocol(); showTab('resultados'); setTimeout(() => window.print(), 100); }));
             $$('[data-action=protocol]').forEach(b => b.addEventListener('click', printProtocol));
+            // Exportaciones de resultados junto al botón de informe
+            $$('[data-action=print]').forEach(b => {
+                b.textContent = 'Informe (PDF)';
+                b.insertAdjacentHTML('afterend', '<button type="button" data-action="csv-raw">Datos crudos (CSV)</button><button type="button" data-action="csv-tables">Tablas de resultados (CSV)</button>');
+            });
+            $$('[data-action=csv-raw]').forEach(b => b.addEventListener('click', () => {
+                if (!app.rows.length) { toast('No hay mediciones', 'error'); return; }
+                const cols = [...spec.stepFields, ...measureFields()];
+                download(`${slug(app.cfg.name || spec.id)}_datos.csv`, toCSV(['#', ...cols.map(f => f.label + (f.unit ? ` [${f.unit}]` : ''))], app.rows.map((r, i) => [i + 1, ...cols.map(f => r[f.key])])), 'text/csv');
+            }));
+            $$('[data-action=csv-tables]').forEach(b => b.addEventListener('click', () => {
+                const body = $('#res-body');
+                if (!body) { toast('Primero genere los resultados', 'error'); return; }
+                download(`${slug(app.cfg.name || spec.id)}_resultados.csv`, root.LabUI.resultsCSV(body), 'text/csv');
+            }));
             $$('[data-check]').forEach((cb, i) => {
                 const k = `check:${spec.id}:${i}`;
                 cb.checked = !!Store.read(k, false);

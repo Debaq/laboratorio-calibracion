@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor de Presión</title>
-    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
+    <link rel="stylesheet" href="css/lab.css?v=ca980740">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -27,16 +28,15 @@
                 junto con su incertidumbre, linealidad e histéresis.</div>
 
             <h2>Principio: manómetro en U</h2>
-            <div class="math">      rama abierta        rama presurizada
+            <div class="diagram">      rama abierta        rama presurizada
           │  │                │  │
     h_B → │▓▓│                │  │ ← aire a presión (jeringa + sensor)
           │▓▓│                │  │
           │▓▓│      Δh        │  │
           │▓▓│                │▓▓│ ← h_A
           │▓▓└────────────────┘▓▓│
-          └──────── agua ────────┘
-
-ΔP = (ρ_agua(T) − ρ_aire) · g_local · Δh        Δh = h_B − h_A</div>
+          └──────── agua ────────┘</div>
+            <div class="math">\[ \Delta P = \big(\rho_\text{agua}(T) - \rho_\text{aire}\big)\, g_\text{local}\, \Delta h \qquad \Delta h = h_B - h_A \]</div>
             <ul>
                 <li>El sensor debe ver <strong>solo aire</strong> en su puerto. Así mide la presión del aire atrapado, que empuja el agua. La altura a la que está
                     montado el sensor no importa, porque el aire pesa unas 800 veces menos que el agua.</li>
@@ -49,7 +49,7 @@
 
             <h3>Calibración en el sentido de uso</h3>
             <p>Lo que se necesita después es <em>calcular ΔP a partir de V</em>, así que se ajusta directamente:</p>
-            <div class="math">ΔP = c₀ + c₁·V            (o + c₂·V² si la prueba F muestra que la curvatura es real)</div>
+            <div class="math">\[ \Delta P = c_0 + c_1 V \;\;\big(+\, c_2 V^{2}\ \text{si la prueba F muestra que la curvatura es real}\big) \]</div>
             <p>Se reporta el error estándar de la estimación (SEE) y la incertidumbre de predicción en todo el rango.
                 Fuera del rango medido la ecuación <strong>no está validada</strong>.</p>
 
@@ -161,14 +161,17 @@
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
-    <script src="js/core/linalg.js"></script>
-    <script src="js/core/stats.js"></script>
-    <script src="js/core/physics.js"></script>
-    <script src="js/core/uncertainty.js"></script>
-    <script src="js/core/store.js"></script>
-    <script src="js/core/ui.js"></script>
-    <script src="js/core/app.js"></script>
-    <script src="js/modules/presion-model.js"></script>
-    <script src="js/modules/presion-ui.js"></script>
+    <script src="vendor/katex/katex.min.js?v=aff7d394"></script>
+    <script src="vendor/katex/contrib/auto-render.min.js?v=82dca940"></script>
+    <script src="js/core/math.js?v=de9bafdf"></script>
+    <script src="js/core/linalg.js?v=b094972b"></script>
+    <script src="js/core/stats.js?v=2afcf6b6"></script>
+    <script src="js/core/physics.js?v=9c913ecd"></script>
+    <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
+    <script src="js/core/store.js?v=f7436a57"></script>
+    <script src="js/core/ui.js?v=acf34270"></script>
+    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/modules/presion-model.js?v=15ac593e"></script>
+    <script src="js/modules/presion-ui.js?v=87341386"></script>
 </body>
 </html>
