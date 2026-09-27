@@ -257,6 +257,32 @@ table.matrix td:first-child { text-align: left; font-family: var(--font); }
 .toast.out { opacity: 0; transform: translateY(8px); }
 
 .print-only { display: none; }
+/* Web Serial: panel de captura en Medición y código Arduino */
+.serial > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.serial-status { margin-left: auto; font-weight: 400; font-size: .88rem; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); display: inline-block; }
+.dot.on { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.serial-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0; }
+.serial-bar label { display: inline-flex; align-items: center; gap: 6px; }
+.serial-bar select { width: auto; }
+.serial-bar input[type=text] { width: 4.5em; text-align: right; }
+.serial-live { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.serial-live > div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; min-width: 110px; }
+.serial-live > div.mapped { border-color: var(--accent); background: var(--accent-soft); }
+.serial-live > div.time { opacity: .65; }
+.serial-live span { display: block; font-size: .78rem; color: var(--muted); }
+.serial-live b { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.serial-map { margin-top: 4px; }
+.serial-sketch { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+.serial-sketch > summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.sketch .sk-meta { margin: 8px 0; padding-left: 1.2em; font-size: .92rem; }
+.sketch .sk-meta li { margin: 2px 0; }
+.sketch .sk-code { max-height: 440px; font-size: .82rem; line-height: 1.45; }
+.sketch .field { max-width: 460px; }
+button.primary kbd { background: transparent; color: inherit; border-color: currentColor; opacity: .8; }
+button.rec { color: var(--bad); }
+button.rec.danger { background: var(--bad-soft); border-color: var(--bad); }
+
 footer.foot { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; color: var(--muted); font-size: .88rem; border-top: 1px solid var(--border); }
 
 @media print {

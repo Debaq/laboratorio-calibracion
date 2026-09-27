@@ -89,6 +89,22 @@ El motor ofrece:
 - En **Resultados**: *Informe (PDF)*, *Datos crudos (CSV)* y *Tablas de resultados (CSV)* (indicadores y todas las tablas, por secciones).
 - Los CSV usan separador `;` y coma decimal: se abren directo en Excel en español.
 
+### Leer desde la placa (Web Serial)
+
+Cada sensor y módulo trae su **código Arduino** (pestaña *Guía*, con variantes por chip: SHT31, BME280, DHT22, VL53L0X, INA226, AS5600…),
+listo para copiar o descargar como `.ino`. Todos imprimen el mismo formato a 115200 baudios: un encabezado con los nombres de columna
+(`t_ms,lectura`, `t_ms,ax,ay,az,gx,gy,gz`, `t_ms,c1,c2,c3,c4`…) y una línea de datos separada por comas.
+
+Con **Chrome o Edge en computador** (Web Serial funciona también abriendo el archivo con doble clic):
+
+- En *Medición*, **Conectar placa** muestra los valores en vivo y asigna sola cada columna a su campo (se puede cambiar a mano).
+  **Capturar promedio** (<kbd>Ctrl+Enter</kbd>) promedia unos segundos, completa los campos e informa n, s y rango; opcionalmente registra la medición.
+- En los ensayos con series de tiempo (tiempo de respuesta, giroscopio, magnetómetro, ruido y dinámico de la plataforma),
+  **Grabar desde la placa** registra la serie y la analiza.
+- Los sketches aceptan comandos: `h` repite el encabezado y, en el caudalímetro, `z` pone el conteo de pulsos en cero.
+
+Sin Web Serial (Firefox, Safari, tablets) todo sigue funcionando pegando el texto del Monitor serie del IDE.
+
 ### Protocolo de ensayo en PDF
 
 Todos los módulos tienen **Descargar protocolo (PDF)**: datos del grupo, configuración, instrucciones completas y **hoja de registro** con cada acción del plan
@@ -128,6 +144,8 @@ js/core/
   signal.js                      filtro de fase cero, círculo, elipsoide, Allan, escalón, estabilometría
   csv.js                         lectura tolerante de CSV (monitor serie, Excel)
   math.js                        fórmulas con KaTeX
+  serial.js                      lectura de la placa por Web Serial (captura promediada y grabación de series)
+  sketches.js                    código Arduino de cada sensor y módulo (mismo formato de salida)
   store.js  ui.js  app.js        almacenamiento, gráficos SVG y su exportación, estructura común de los módulos
 js/catalogo.js                   catálogo unificado del inicio (módulos + perfiles, búsqueda, “continuar”)
 js/modules/                      *-model.js (matemática pura, testeable) y *-ui.js (interfaz)

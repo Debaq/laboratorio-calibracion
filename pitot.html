@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tubo de Pitot</title>
     <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
-    <link rel="stylesheet" href="css/lab.css?v=ca980740">
+    <link rel="stylesheet" href="css/lab.css?v=a5b65b0a">
 </head>
 <body data-device="pitot">
     <header class="top"><div class="inner">
@@ -48,6 +48,11 @@
                 <li><strong>Siga el plan</strong>: para cada velocidad del ventilador espere 30 s y registre la salida del sensor y la referencia.</li>
                 <li><strong>Revise C vs Re</strong> y los puntos de baja velocidad, que son los de mayor incertidumbre.</li>
             </ol>
+            <div class="no-print">
+                <h2>Código Arduino</h2>
+                <p>Cárguelo en la placa y, en la pestaña <strong>Medición</strong>, presione <em>Conectar placa</em>: la página promedia la salida durante unos segundos y completa los campos (Chrome o Edge en computador). También funciona con el Monitor serie del IDE.</p>
+                <div class="card" data-sketches></div>
+            </div>
             <h2>Lista de verificación</h2>
             <div class="card">
                 <label class="check"><input type="checkbox" data-check> Mangueras total/estática conectadas al puerto correcto del sensor</label>
@@ -125,7 +130,9 @@
     <script src="js/core/uncertainty.js?v=2d3dc5a9"></script>
     <script src="js/core/store.js?v=f7436a57"></script>
     <script src="js/core/ui.js?v=acf34270"></script>
-    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/core/sketches.js?v=ce1f744a"></script>
+    <script src="js/core/serial.js?v=0541f694"></script>
+    <script src="js/core/app.js?v=9bc50ad5"></script>
     <script src="js/modules/presion-model.js?v=15ac593e"></script>
     <script src="js/modules/flujo-model.js?v=860a5430"></script>
     <script src="js/modules/flujo-ui.js?v=9937577a"></script>

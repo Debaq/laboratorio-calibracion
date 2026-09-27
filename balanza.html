@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Posturógrafo de Balanza</title>
     <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
-    <link rel="stylesheet" href="css/lab.css?v=ca980740">
+    <link rel="stylesheet" href="css/lab.css?v=a5b65b0a">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -120,30 +120,12 @@
                     Si el círculo se deforma o Fz oscila, los 4 HX711 no están muestreando al mismo tiempo.</li>
             </ul>
 
-            <h3>Sketch de registro (4 × HX711)</h3>
-            <pre>// Registro crudo para ensayos 2 y 3 — requiere librería "HX711" (bogde)
-// Ponga el pin RATE de cada HX711 en VCC para 80 Hz (en muchos módulos es un puente a soldar).
-#include "HX711.h"
-const int DOUT[4] = {2, 4, 6, 8};
-const int SCK_[4] = {3, 5, 7, 9};
-HX711 hx[4];
-
-void setup() {
-  Serial.begin(115200);
-  for (int i = 0; i &lt; 4; i++) hx[i].begin(DOUT[i], SCK_[i]);
-  Serial.println("t_ms,c1,c2,c3,c4");
-}
-
-void loop() {
-  // Espera a que los 4 tengan dato nuevo, así las muestras quedan lo más juntas posible
-  while (!(hx[0].is_ready() &amp;&amp; hx[1].is_ready() &amp;&amp; hx[2].is_ready() &amp;&amp; hx[3].is_ready())) {}
-  unsigned long t = millis();
-  long c[4];
-  for (int i = 0; i &lt; 4; i++) c[i] = hx[i].read();
-  Serial.print(t);
-  for (int i = 0; i &lt; 4; i++) { Serial.print(','); Serial.print(c[i]); }
-  Serial.println();
-}</pre>
+            <div class="no-print">
+                <h3>Código Arduino (4 × HX711)</h3>
+                <p>Con Web Serial (Chrome o Edge en computador): en <strong>Medición</strong>, <em>Capturar promedio</em> completa las 4 celdas; en los ensayos de ruido
+                    y dinámico, <em>Grabar desde la placa</em> registra la serie y la analiza. Sin Web Serial, copie el texto del Monitor serie del IDE.</p>
+                <div class="card" data-sketches></div>
+            </div>
             <p class="muted small">También se aceptan archivos con fuerzas por celda (<code>t_ms,F1,F2,F3,F4</code> en N) o con el CoP ya calculado (<code>t_ms,cop_x,cop_y,fz</code>).</p>
 
             <h2>Lista de verificación</h2>
@@ -254,7 +236,7 @@ void loop() {
                     <div class="field"><label>Piso máximo aceptable <small>(% de la referencia)</small></label><input type="text" inputmode="decimal" data-bind="series.noise.pct" data-type="number"></div>
                 </div>
                 <div class="field" style="margin-top:12px"><label>Datos (CSV)</label>
-                    <textarea id="noise-text" rows="4" placeholder="Pegue aquí el texto del monitor serie (t_ms,c1,c2,c3,c4 …)"></textarea></div>
+                    <textarea id="noise-text" data-serial="noise-import" rows="4" placeholder="Pegue aquí el texto del monitor serie (t_ms,c1,c2,c3,c4 …)"></textarea></div>
                 <div class="actions">
                     <button type="button" class="primary" id="noise-import">Analizar texto pegado</button>
                     <label class="button">Abrir archivo CSV<input type="file" id="noise-file" accept=".csv,.txt,text/plain" hidden></label>
@@ -288,7 +270,7 @@ void loop() {
                     <div class="field"><label>Nombre de la corrida</label><input type="text" id="dyn-label" placeholder="Ej: 30 rpm"></div>
                 </div>
                 <div class="field" style="margin-top:12px"><label>Datos (CSV)</label>
-                    <textarea id="dyn-text" rows="4" placeholder="Pegue aquí el texto del monitor serie"></textarea></div>
+                    <textarea id="dyn-text" data-serial="dyn-import" rows="4" placeholder="Pegue aquí el texto del monitor serie"></textarea></div>
                 <div class="actions">
                     <button type="button" class="primary" id="dyn-import">Agregar texto pegado</button>
                     <label class="button">Abrir archivos CSV<input type="file" id="dyn-file" accept=".csv,.txt,text/plain" multiple hidden></label>
@@ -310,7 +292,9 @@ void loop() {
     <script src="js/core/signal.js?v=e0ab2496"></script>
     <script src="js/core/store.js?v=f7436a57"></script>
     <script src="js/core/ui.js?v=acf34270"></script>
-    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/core/sketches.js?v=ce1f744a"></script>
+    <script src="js/core/serial.js?v=0541f694"></script>
+    <script src="js/core/app.js?v=9bc50ad5"></script>
     <script src="js/modules/balanza-model.js?v=6c6e94b7"></script>
     <script src="js/modules/balanza-series.js?v=25d3b6d6"></script>
     <script src="js/modules/balanza-ui.js?v=6f422abd"></script>

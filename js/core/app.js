@@ -78,6 +78,7 @@
             if (name === 'medir') renderMeasure();
             if (name === 'resultados') renderResults();
             if (name === 'guardados') renderSaved();
+            if (name === 'guia') renderSketches();
             spec.onTab && spec.onTab(name, app);
             root.LabMath && root.LabMath.render($(`#tab-${name}`));
             try { history.replaceState(null, '', `#${name}`); } catch (e) { /* file:// en algunos navegadores */ }
@@ -167,6 +168,7 @@
                 ${done
                     ? `<div class="action done"><div class="kicker">Plan completo</div><p>Se registraron todas las mediciones del plan. Revise los <a href="#resultados" data-goto="resultados">Resultados</a>, o agregue mediciones extra abajo.</p></div>`
                     : `<div class="action"><div class="kicker">Acción ${step + 1}</div><p>${esc(cur.action)}</p></div>`}
+                <div id="serial-panel"></div>
                 <form id="measure-form" class="card" autocomplete="off">
                     <div class="grid auto">${spec.stepFields.map(f => fieldInput(f, sv[f.key], 'st')).join('')}</div>
                     <div class="grid auto emph">${measureFields().map(f => fieldInput(f, '', 'm')).join('')}</div>
@@ -194,6 +196,30 @@
                 saveDraft(); renderMeasure();
             }));
             bindGoto(el);
+            mountSerial();
+        }
+
+        /** Panel de Web Serial: captura el promedio de la placa y completa los campos de la medición. */
+        function mountSerial() {
+            if (!root.LabSerial || !$('#serial-panel')) return;
+            root.LabSerial.mountPanel($('#serial-panel'), {
+                id: spec.id,
+                sketchId: spec.sketchId,
+                fields: measureFields(),
+                getCfg: () => app.cfg,
+                fill(key, v) {
+                    const inp = $(`#m-${key}`);
+                    if (!inp) return;
+                    inp.value = isFinite(v) ? String(+v.toPrecision(7)).replace('.', ',') : '';
+                    inp.classList.remove('invalid');
+                },
+                register
+            });
+        }
+
+        function renderSketches() {
+            if (!root.LabSketches) return;
+            $$('[data-sketches]').forEach(el => root.LabSketches.render(el, el.dataset.sketches || spec.sketchId || spec.id, () => app.cfg));
         }
 
         function register() {
@@ -478,6 +504,7 @@
             });
             bindGoto(document);
             spec.setupConfig && spec.setupConfig(app);
+            root.LabSerial && root.LabSerial.attachRecorders(document);
             fillConfig();
             updateStatus();
             if (/[?&]ejemplo\b/.test(location.search)) { app.state.rows = []; loadExample(); return; }

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMU: sensores crudos</title>
     <link rel="stylesheet" href="vendor/katex/katex.min.css?v=362dd5bd">
-    <link rel="stylesheet" href="css/lab.css?v=ca980740">
+    <link rel="stylesheet" href="css/lab.css?v=a5b65b0a">
 </head>
 <body>
     <header class="top"><div class="inner">
@@ -64,24 +64,14 @@
                 <p>\(\mathbf c\): centro (hierro duro) · \(\mathbf W\): deformación inversa (hierro blando)</p></div>
             <p><strong>Calibre el magnetómetro montado en su lugar final</strong>: la corrección incluye los metales de SU montaje.</p>
 
-            <h2>Registro de datos (CSV)</h2>
-            <pre>// MPU6050 con librería Adafruit_MPU6050: imprime t_ms, aceleración (m/s²) y giro (rad/s)
-#include &lt;Adafruit_MPU6050.h&gt;
-Adafruit_MPU6050 mpu;
-void setup() {
-  Serial.begin(115200); mpu.begin();
-  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  Serial.println("t_ms,ax,ay,az,gx,gy,gz");
-}
-void loop() {
-  sensors_event_t a, g, temp; mpu.getEvent(&amp;a, &amp;g, &amp;temp);
-  Serial.print(millis()); Serial.print(',');
-  Serial.print(a.acceleration.x, 4); Serial.print(','); Serial.print(a.acceleration.y, 4); Serial.print(','); Serial.print(a.acceleration.z, 4); Serial.print(',');
-  Serial.print(g.gyro.x, 5); Serial.print(','); Serial.print(g.gyro.y, 5); Serial.print(','); Serial.println(g.gyro.z, 5);
-  delay(10);   // ~100 Hz
-}</pre>
-            <p class="muted small">Para el magnetómetro imprima <code>t_ms,mx,my,mz</code> (µT o cuentas). El acelerómetro se ingresa a mano: el promedio de ~2 s en cada posición.</p>
+            <div class="no-print">
+                <h2>Código Arduino</h2>
+                <p>Con Web Serial (Chrome o Edge en computador) no hace falta copiar datos: en <strong>Medición</strong>, <em>Capturar promedio</em> toma ~2 s de
+                    ax, ay, az en cada posición; en <strong>Giroscopio</strong> y <strong>Magnetómetro</strong>, <em>Grabar desde la placa</em> registra la serie y la analiza.
+                    Sin Web Serial, copie el texto del Monitor serie del IDE.</p>
+                <div class="card" data-sketches></div>
+            </div>
+            <p class="muted small">Formato de los registros: <code>t_ms,ax,ay,az,gx,gy,gz</code> para el acelerómetro y el giroscopio, <code>t_ms,mx,my,mz</code> para el magnetómetro (µT o cuentas).</p>
 
             <h2>Lista de verificación</h2>
             <div class="card">
@@ -145,7 +135,7 @@ void loop() {
         <section class="panel" id="tab-giro" hidden>
             <div class="card"><h3>1 · Reposo (sesgo, ruido, Allan)</h3>
                 <p class="muted small">Sensor quieto sobre una mesa sin vibraciones, 10–30 min. CSV con <code>t_ms,gx,gy,gz</code>. Solo se guarda el resumen (los registros largos no caben en el navegador).</p>
-                <textarea id="gs-text" rows="3" placeholder="t_ms,gx,gy,gz …"></textarea>
+                <textarea id="gs-text" data-serial="gs-run" rows="3" placeholder="t_ms,gx,gy,gz …"></textarea>
                 <div class="actions"><button type="button" class="primary" id="gs-run">Analizar texto</button>
                     <label class="button">Abrir archivo<input type="file" id="gs-file" accept=".csv,.txt" hidden></label>
                     <button type="button" id="gs-ex">Ejemplo simulado (10 min)</button></div>
@@ -157,7 +147,7 @@ void loop() {
                     <div class="field"><label>Ángulo verdadero <small>(°, con signo)</small></label><input type="text" id="gr-angle" inputmode="decimal" value="360"></div>
                     <div class="field"><label>Nombre</label><input type="text" id="gr-name" placeholder="Ej: z +360 #1"></div>
                 </div>
-                <textarea id="gr-text" rows="3" placeholder="t_ms,gx,gy,gz …" style="margin-top:10px"></textarea>
+                <textarea id="gr-text" data-serial="gr-run" rows="3" placeholder="t_ms,gx,gy,gz …" style="margin-top:10px"></textarea>
                 <div class="actions"><button type="button" class="primary" id="gr-run">Agregar giro</button>
                     <label class="button">Abrir archivo<input type="file" id="gr-file" accept=".csv,.txt" hidden></label>
                     <button type="button" id="gr-ex">Ejemplo simulado</button></div>
@@ -168,7 +158,7 @@ void loop() {
         <section class="panel" id="tab-mag" hidden>
             <div class="card"><h3>Registro de rotación</h3>
                 <p class="muted small">Gire lentamente el sensor (ya montado) en todas direcciones durante ~60 s, como dibujando un “8” en el aire con todas las caras. CSV con <code>t_ms,mx,my,mz</code>.</p>
-                <textarea id="mg-text" rows="3" placeholder="t_ms,mx,my,mz …"></textarea>
+                <textarea id="mg-text" data-serial="mg-run" rows="3" placeholder="t_ms,mx,my,mz …"></textarea>
                 <div class="actions"><button type="button" class="primary" id="mg-run">Analizar texto</button>
                     <label class="button">Abrir archivo<input type="file" id="mg-file" accept=".csv,.txt" hidden></label>
                     <button type="button" id="mg-ex">Ejemplo simulado</button></div>
@@ -190,7 +180,9 @@ void loop() {
     <script src="js/core/csv.js?v=959a20b6"></script>
     <script src="js/core/store.js?v=f7436a57"></script>
     <script src="js/core/ui.js?v=acf34270"></script>
-    <script src="js/core/app.js?v=284e3387"></script>
+    <script src="js/core/sketches.js?v=ce1f744a"></script>
+    <script src="js/core/serial.js?v=0541f694"></script>
+    <script src="js/core/app.js?v=9bc50ad5"></script>
     <script src="js/modules/imucrudo-model.js?v=28e1f7f1"></script>
     <script src="js/modules/imucrudo-ui.js?v=5bf33304"></script>
 </body>

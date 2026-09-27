@@ -57,6 +57,11 @@
             ${g.procedimiento ? `<h2>Procedimiento</h2><ol class="steps">${g.procedimiento.map(x => `<li>${x}</li>`).join('')}</ol>` : ''}
             ${g.checklist ? `<h2>Lista de verificación</h2><div class="card">${g.checklist.map(x => `<label class="check"><input type="checkbox" data-check> ${x}</label>`).join('')}</div>` : ''}
             ${g.errores ? `<h2>Errores comunes</h2><ul>${g.errores.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+            ${window.LabSketches && window.LabSketches.forModule(profile.id).length ? `<div class="no-print">
+                <h2>Código Arduino</h2>
+                <p>Cárguelo en la placa y, en la pestaña <strong>Medición</strong>, presione <em>Conectar placa</em>: la página promedia la lectura durante unos segundos
+                    y completa el campo (Chrome o Edge en computador). También funciona con el Monitor serie del IDE.</p>
+                <div class="card" data-sketches></div></div>` : ''}
             <p class="muted small">Conceptos generales (sesgo, repetibilidad, incertidumbre, conformidad): <a href="fundamentos.html">Fundamentos de calibración</a>.</p>
             <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
                 <button type="button" data-action="example">Ver un ejemplo con datos simulados</button>
@@ -125,9 +130,9 @@
                 <li>Deje el sensor estable en la condición inicial (p. ej. aire a temperatura ambiente) y comience a registrar con marca de tiempo (<code>t_ms,lectura</code>).</li>
                 <li>Pasados 3–5 s, cámbielo de golpe a la condición final (p. ej. punto de hielo) y no lo mueva.</li>
                 <li>Siga registrando al menos 5·τ (hasta que la lectura deje de cambiar).</li>
-                <li>Pegue el texto del monitor serie o abra el archivo.</li></ol></div>
+                <li>Pegue el texto del monitor serie, abra el archivo o use <em>Grabar desde la placa</em> (Web Serial).</li></ol></div>
             <div class="card">
-                <div class="field"><label>Datos (CSV con tiempo y lectura)</label><textarea id="tr-text" rows="4" placeholder="t_ms,lectura&#10;0,21.50&#10;100,21.49 …"></textarea></div>
+                <div class="field"><label>Datos (CSV con tiempo y lectura)</label><textarea id="tr-text" data-serial="tr-run" rows="4" placeholder="t_ms,lectura&#10;0,21.50&#10;100,21.49 …"></textarea></div>
                 <div class="actions">
                     <button type="button" class="primary" id="tr-run">Analizar</button>
                     <label class="button">Abrir archivo<input type="file" id="tr-file" accept=".csv,.txt,text/plain" hidden></label>
@@ -150,7 +155,7 @@
             const L = labels(cfg), m = modeOf(cfg);
             return [
                 ...(computedRef(cfg) ? [] : [{ key: 'ref', label: `${L.quantity} de referencia`, short: 'Referencia', unit: L.unit, decimals: 3 }]),
-                { key: 'reading', label: profile.labels ? L.reading : (M.modes.length > 1 ? m.label.replace(/\s*\(.*$/, '') : profile.reading.label), short: 'Lectura', unit: profile.labels ? L.readingUnit : (m.unit || profile.reading.unit), decimals: 4 },
+                { key: 'reading', label: profile.labels ? L.reading : (M.modes.length > 1 ? m.label.replace(/\s*\(.*$/, '') : profile.reading.label), short: 'Lectura', unit: profile.labels ? L.readingUnit : (m.unit || profile.reading.unit), decimals: 4, serial: ['lectura'], serialAuto: true },
                 ...(profile.extraFields || []).map(f => ({ ...f, decimals: 2 }))
             ];
         },
