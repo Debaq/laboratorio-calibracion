@@ -16,15 +16,35 @@
     <nav class="tabs" role="tablist">
         <button data-tab="guia"><span class="num">1</span>Guía</button>
         <button data-tab="config"><span class="num">2</span>Preparación</button>
-        <button data-tab="medir"><span class="num">3</span>Medición</button>
+        <button data-tab="medir"><span class="num">3</span>Medición estática</button>
         <button data-tab="resultados"><span class="num">4</span>Resultados</button>
-        <button data-tab="guardados"><span class="num">5</span>Guardados</button>
+        <button data-tab="ruido"><span class="num">5</span>Ruido de fondo</button>
+        <button data-tab="dinamico"><span class="num">6</span>Dinámico</button>
+        <button data-tab="guardados"><span class="num">7</span>Guardados</button>
     </nav></header>
 
     <main>
         <section class="panel" id="tab-guia">
             <div class="callout"><strong>Objetivo:</strong> obtener el factor de escala de cada celda de carga (N por cuenta del HX711) y verificar que la
                 plataforma mide bien la <strong>fuerza vertical</strong> y el <strong>centro de presión (CoP)</strong>, que es la variable principal de la posturografía.</div>
+
+            <h2>Tres ensayos, tres preguntas</h2>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Ensayo</th><th>Pregunta</th><th>Qué se obtiene</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>1 · Estático</strong><br><small>masas quietas</small></td><td>¿Cuánto vale cada celda y dónde está el CoP de una carga quieta?</td><td>Factores k, linealidad, histéresis, error de CoP, fluencia</td></tr>
+                    <tr><td><strong>2 · Ruido de fondo</strong><br><small>carga inmóvil 30–60 s</small></td><td>¿Cuánto “oscila” el CoP cuando nada se mueve?</td><td>Piso del instrumento en las mismas métricas que se informan en pacientes</td></tr>
+                    <tr><td><strong>3 · Dinámico</strong><br><small>masa giratoria</small></td><td>¿Sigue la plataforma un CoP que se mueve, sin atenuarlo ni deformarlo?</td><td>Respuesta en amplitud de 0,1 a 2 Hz (banda de la oscilación postural)</td></tr>
+                </tbody>
+            </table></div>
+            <p>El ensayo 1 es necesario pero <strong>no suficiente</strong>: una plataforma puede dar el peso exacto y aun así tener tanto ruido, deriva o
+                retardo que no distinga a un sujeto estable de uno inestable. Los ensayos 2 y 3 usan series de tiempo registradas por el Arduino (CSV).</p>
+
+            <h3>¿Y el cuerpo humano?</h3>
+            <p>La plataforma mide el <strong>CoP</strong>: el punto donde actúa la resultante de las fuerzas verticales. El <strong>centro de masa (CoM)</strong> de una
+                persona es otra cosa. Cuando el cuerpo acelera, el CoP se adelanta al CoM para controlarlo (modelo de péndulo invertido). Esa diferencia es física, no un error.
+                Por eso a una persona no se la usa como referencia: nadie sabe dónde está “de verdad” su CoP. Para calibrar se usan <strong>fantomas</strong> cuyo CoP se conoce por cálculo.
+                Medir a la misma persona varias veces y comparar es un estudio de <em>confiabilidad</em> (CCI), que viene después de calibrar.</p>
 
             <h2>Principio: estática de un cuerpo rígido</h2>
             <p>Cada celda <em>i</em>, ubicada en (x<sub>i</sub>, y<sub>i</sub>), entrega un número crudo r<sub>i</sub>. Después de la tara (plataforma vacía, r0<sub>i</sub>):</p>
@@ -69,11 +89,65 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
                 <li><strong>Mida la geometría</strong>: posiciones de las 4 celdas y de los puntos de carga.</li>
                 <li><strong>Pese las masas</strong> en una balanza de referencia y estime su incertidumbre.</li>
                 <li><strong>Complete la Preparación</strong> y genere el plan.</li>
-                <li><strong>Siga el plan</strong>: tara → cargas crecientes en cada posición → descarga → tara final. Coloque la masa centrada sobre la marca,
-                    espere 5 s (las celdas “reptan” al principio) y registre las 4 lecturas crudas.</li>
+                <li><strong>Siga el plan</strong>: tara → escalera de masas en el centro, subiendo y bajando → una masa en cada posición de CoP → tara final →
+                    prueba de fluencia (60 s). Coloque la masa centrada sobre la marca, espere 5 s (las celdas “reptan” al principio) y registre las 4 lecturas crudas.</li>
                 <li><strong>Revise</strong> los factores k: deben ser positivos y parecidos entre sí si las celdas son iguales.</li>
                 <li><strong>Copie el código</strong> generado a su firmware y verifique con una masa que no se usó en la calibración.</li>
             </ol>
+
+            <h2>Ensayo 2 · Ruido de fondo</h2>
+            <ol class="steps">
+                <li>Cargue el sketch de registro (abajo) y abra el monitor serie a 115200 baudios.</li>
+                <li>Con la plataforma <strong>vacía</strong>, reinicie el Arduino y espere 3 s (esa es la tara del archivo).</li>
+                <li>Coloque un lastre inmóvil del peso de una persona (sacos de arena, bidones con agua) repartido cerca del centro. No lo toque ni camine cerca.</li>
+                <li>Registre 45–60 s. Copie todo el texto del monitor (Ctrl+A, Ctrl+C) y péguelo en la pestaña <em>Ruido de fondo</em>, o guárdelo como .csv.</li>
+            </ol>
+            <p>Se calculan las mismas métricas que en un paciente: RMS, largo de trayectoria, <strong>velocidad media</strong> y área de la elipse del 95 %.
+                Use el <strong>mismo filtro y muestreo</strong> que usará con los sujetos: la velocidad media del ruido crece con la frecuencia de muestreo.</p>
+
+            <h2>Ensayo 3 · Masa giratoria</h2>
+            <div class="math">        vista superior                     vista lateral
+      ·  ·  m  ·  ·                  m ●───── brazo r
+    ·            ·                     │
+   ·      ⊕       ·     ←  R         motor ▓  ← masa base (lastre)
+    ·  motor     ·                 ════╧════════════  superficie
+      ·  ·  ·  ·                   ▲ celdas ▲    h = altura de m sobre las celdas
+
+R(ω) = (m·r / M) · (1 + ω²·h / g)          M = masa total sobre la plataforma</div>
+            <ul>
+                <li>Motor DC con reductora (5–120 rpm) o paso a paso, fijo sobre una base pesada en el centro. Brazo rígido con una masa m (0,5–2 kg) a radio r.</li>
+                <li>Mida r (eje del motor → centro de la masa) y h (plano de apoyo de las celdas → centro de la masa).</li>
+                <li>Registre al menos <strong>3 vueltas</strong> a cada velocidad: 12, 30, 60, 90 y 120 rpm (0,2 a 2 Hz).</li>
+                <li>El término <code>ω²·h/g</code> es la fuerza centrífuga: a 1 Hz con h = 10 cm agrega 40 % al radio. Por eso h debe medirse bien.</li>
+                <li>Si el radio medido cae por debajo del teórico a frecuencias altas, el filtro o el muestreo están recortando la señal.
+                    Si el círculo se deforma o Fz oscila, los 4 HX711 no están muestreando al mismo tiempo.</li>
+            </ul>
+
+            <h3>Sketch de registro (4 × HX711)</h3>
+            <pre>// Registro crudo para ensayos 2 y 3 — requiere librería "HX711" (bogde)
+// Ponga el pin RATE de cada HX711 en VCC para 80 Hz (en muchos módulos es un puente a soldar).
+#include "HX711.h"
+const int DOUT[4] = {2, 4, 6, 8};
+const int SCK_[4] = {3, 5, 7, 9};
+HX711 hx[4];
+
+void setup() {
+  Serial.begin(115200);
+  for (int i = 0; i &lt; 4; i++) hx[i].begin(DOUT[i], SCK_[i]);
+  Serial.println("t_ms,c1,c2,c3,c4");
+}
+
+void loop() {
+  // Espera a que los 4 tengan dato nuevo, así las muestras quedan lo más juntas posible
+  while (!(hx[0].is_ready() &amp;&amp; hx[1].is_ready() &amp;&amp; hx[2].is_ready() &amp;&amp; hx[3].is_ready())) {}
+  unsigned long t = millis();
+  long c[4];
+  for (int i = 0; i &lt; 4; i++) c[i] = hx[i].read();
+  Serial.print(t);
+  for (int i = 0; i &lt; 4; i++) { Serial.print(','); Serial.print(c[i]); }
+  Serial.println();
+}</pre>
+            <p class="muted small">También se aceptan archivos con fuerzas por celda (<code>t_ms,F1,F2,F3,F4</code> en N) o con el CoP ya calculado (<code>t_ms,cop_x,cop_y,fz</code>).</p>
 
             <h2>Lista de verificación</h2>
             <div class="card">
@@ -93,7 +167,8 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
                 <li><strong>Masa apoyada fuera de la marca</strong>: 5 mm de error de posición son 5 mm de “error” de CoP.</li>
             </ul>
             <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
-                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button></div>
         </section>
 
         <section class="panel" id="tab-config" hidden>
@@ -118,9 +193,15 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
                     <div class="field"><label>Masas <small>(kg)</small></label><input type="text" data-bind="masses_kg" data-type="list">
                         <div class="help">Masa real de cada carga, separadas por “;”. Ej.: 10; 20; 40</div></div>
                     <div class="field"><label>Ciclos</label><input type="text" inputmode="numeric" data-bind="cycles" data-type="number"></div>
-                    <div class="field"><label class="inline-check"><input type="checkbox" data-bind="bidirectional"> Cargar y descargar (mide histéresis)</label></div>
+                    <div class="field"><label>Peso máximo de uso <small>(kg)</small></label><input type="text" inputmode="decimal" data-bind="maxUse_kg" data-type="number">
+                        <div class="help">La persona más pesada que se evaluará. Calibre hasta ese valor.</div></div>
+                    <div class="field"><label>Masa en las demás posiciones <small>(kg)</small></label><input type="text" inputmode="decimal" data-bind="positionMass_kg" data-type="number">
+                        <div class="help">0 = la mayor. La escalera completa se hace solo en la primera posición.</div></div>
+                    <div class="field"><label class="inline-check"><input type="checkbox" data-bind="bidirectional"> Descargar la escalera (histéresis)</label>
+                        <label class="inline-check" style="margin-top:8px"><input type="checkbox" data-bind="creep"> Prueba de fluencia (60 s)</label></div>
                 </div>
                 <h4>Posiciones de carga <small class="muted">(mm)</small></h4>
+                <p class="muted small">La primera posición (normalmente el centro) recibe la escalera de masas; las demás verifican el CoP.</p>
                 <div id="pos-editor"></div>
                 <p class="muted small" id="plan-size"></p>
             </div>
@@ -141,6 +222,7 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
             <div class="actions">
                 <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
                 <button type="button" data-action="example">Cargar datos de ejemplo</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button>
             </div>
         </section>
 
@@ -151,6 +233,73 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
             <div id="results"></div>
         </section>
 
+        <section class="panel" id="tab-ruido" hidden>
+            <div class="callout">Carga inmóvil del peso de una persona durante 30–60 s. Lo que “oscile” el CoP es ruido del instrumento. Vea el procedimiento en la Guía.</div>
+            <div class="card">
+                <h3>Procesamiento (común a ruido y dinámico)</h3>
+                <div class="grid three">
+                    <div class="field"><label>Filtro pasa bajos <small>(Hz)</small></label><input type="text" inputmode="decimal" data-bind="series.filterHz" data-type="number">
+                        <div class="help">El mismo que usará con los sujetos. 0 = sin filtro.</div></div>
+                    <div class="field"><label>Tara</label>
+                        <select data-bind="series.tareMode"><option value="inicio">Primeros segundos del archivo (vacía)</option><option value="estatica">Tara de la calibración estática</option></select></div>
+                    <div class="field" data-show-if="series.tareMode=inicio"><label>Duración de la tara <small>(s)</small></label><input type="text" inputmode="decimal" data-bind="series.tareSec" data-type="number"></div>
+                    <div class="field"><label>Descartar al cargar <small>(s)</small></label><input type="text" inputmode="decimal" data-bind="series.settleSec" data-type="number">
+                        <div class="help">Tiempo de acomodo tras poner la carga.</div></div>
+                    <div class="field"><label>Muestreo si el archivo no trae tiempo <small>(Hz)</small></label><input type="text" inputmode="decimal" data-bind="series.fsDefault" data-type="number"></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Ensayo de ruido</h3>
+                <div class="grid three">
+                    <div class="field"><label>Masa del lastre <small>(kg)</small></label><input type="text" inputmode="decimal" data-bind="series.noise.mass_kg" data-type="number"></div>
+                    <div class="field"><label>Velocidad media típica de sujetos <small>(mm/s)</small></label><input type="text" inputmode="decimal" data-bind="series.noise.refVel_mms" data-type="number">
+                        <div class="help">Orden de magnitud en adultos sanos de pie, ojos abiertos: ~10 mm/s. Use valores de su propio protocolo si los tiene.</div></div>
+                    <div class="field"><label>Piso máximo aceptable <small>(% de la referencia)</small></label><input type="text" inputmode="decimal" data-bind="series.noise.pct" data-type="number"></div>
+                </div>
+                <div class="field" style="margin-top:12px"><label>Datos (CSV)</label>
+                    <textarea id="noise-text" rows="4" placeholder="Pegue aquí el texto del monitor serie (t_ms,c1,c2,c3,c4 …)"></textarea></div>
+                <div class="actions">
+                    <button type="button" class="primary" id="noise-import">Analizar texto pegado</button>
+                    <label class="button">Abrir archivo CSV<input type="file" id="noise-file" accept=".csv,.txt,text/plain" hidden></label>
+                    <button type="button" class="danger" id="noise-clear">Quitar serie</button>
+                </div>
+            </div>
+            <div id="noise-out"></div>
+        </section>
+
+        <section class="panel" id="tab-dinamico" hidden>
+            <div class="callout">Fantoma de masa giratoria: el CoP teórico es un círculo de radio conocido. Una corrida (archivo) por cada velocidad del motor.</div>
+            <div class="math">R(ω) = (m·r / M) · (1 + ω²·h / g)          razón = R medido / R teórico  → ideal 1 en toda la banda</div>
+            <div class="card">
+                <h3>Fantoma</h3>
+                <div class="grid three">
+                    <div class="field"><label>m: masa que gira <small>(kg)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.m_kg" data-type="number"></div>
+                    <div class="field"><label>u(m) <small>(g)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.um_g" data-type="number"></div>
+                    <div class="field"><label>r: radio de giro <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.r_mm" data-type="number"></div>
+                    <div class="field"><label>u(r) <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.ur_mm" data-type="number"></div>
+                    <div class="field"><label>h: altura de m sobre las celdas <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.h_mm" data-type="number"></div>
+                    <div class="field"><label>u(h) <small>(mm)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.uh_mm" data-type="number"></div>
+                    <div class="field"><label>M: masa total sobre la plataforma <small>(kg)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.Mtot_kg" data-type="number">
+                        <div class="help">0 = usar la fuerza medida (recomendado).</div></div>
+                    <div class="field"><label>Tolerancia de amplitud <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.tol_pct" data-type="number"></div>
+                    <div class="field"><label>Frecuencia máxima de interés <small>(Hz)</small></label><input type="text" inputmode="decimal" data-bind="series.dyn.fmax_Hz" data-type="number"></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Agregar corrida</h3>
+                <div class="grid two">
+                    <div class="field"><label>Nombre de la corrida</label><input type="text" id="dyn-label" placeholder="Ej: 30 rpm"></div>
+                </div>
+                <div class="field" style="margin-top:12px"><label>Datos (CSV)</label>
+                    <textarea id="dyn-text" rows="4" placeholder="Pegue aquí el texto del monitor serie"></textarea></div>
+                <div class="actions">
+                    <button type="button" class="primary" id="dyn-import">Agregar texto pegado</button>
+                    <label class="button">Abrir archivos CSV<input type="file" id="dyn-file" accept=".csv,.txt,text/plain" multiple hidden></label>
+                </div>
+            </div>
+            <div id="dyn-out"></div>
+        </section>
+
         <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
     </main>
 
@@ -158,10 +307,12 @@ Centro de presión:  CoP_x = Σ F_i x_i / Σ F_i     CoP_y = Σ F_i y_i / Σ F_i
     <script src="js/core/stats.js"></script>
     <script src="js/core/physics.js"></script>
     <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/signal.js"></script>
     <script src="js/core/store.js"></script>
     <script src="js/core/ui.js"></script>
     <script src="js/core/app.js"></script>
     <script src="js/modules/balanza-model.js"></script>
+    <script src="js/modules/balanza-series.js"></script>
     <script src="js/modules/balanza-ui.js"></script>
 </body>
 </html>

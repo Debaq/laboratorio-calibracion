@@ -23,7 +23,7 @@
         return out;
     };
 
-    const DIR_LABEL = { cero: 'Cero', sube: '↑ Sube', baja: '↓ Baja', tara: 'Tara', carga: '↑ Carga', descarga: '↓ Descarga' };
+    const DIR_LABEL = { cero: 'Cero', sube: '↑ Sube', baja: '↓ Baja', tara: 'Tara', carga: '↑ Carga', descarga: '↓ Descarga', fluencia0: 'Fluencia t = 0', fluencia60: 'Fluencia t = 60 s' };
 
     function create(spec) {
         const draftKey = `draft:${spec.id}`;
@@ -38,7 +38,8 @@
         const measureFields = () => typeof spec.measureFields === 'function' ? spec.measureFields(app.cfg) : spec.measureFields;
 
         function freshState() {
-            return { cfg: spec.model.defaultConfig(), rows: [], plan: [], step: 0, savedId: null };
+            // extra: datos propios del módulo (p. ej. series de tiempo), se guardan junto al experimento
+            return { cfg: spec.model.defaultConfig(), rows: [], plan: [], step: 0, savedId: null, extra: null };
         }
 
         function loadDraft() {
@@ -46,13 +47,18 @@
             const st = freshState();
             if (d) {
                 st.cfg = deepMerge(st.cfg, d.cfg);
-                st.rows = d.rows || []; st.plan = d.plan || []; st.step = d.step || 0; st.savedId = d.savedId || null;
+                st.rows = d.rows || []; st.plan = d.plan || []; st.step = d.step || 0; st.savedId = d.savedId || null; st.extra = d.extra || null;
             }
             app.state = st;
         }
 
+        let quotaWarned = false;
         function saveDraft() {
-            Store.write(draftKey, app.state);
+            const ok = Store.write(draftKey, app.state);
+            if (!ok && !quotaWarned) {
+                quotaWarned = true;
+                toast('El navegador no tiene espacio para guardar el borrador. Exporte JSON y elimine experimentos antiguos.', 'error');
+            }
             updateStatus();
         }
 
@@ -317,7 +323,7 @@
                 if (!n) return;
                 app.cfg.name = n; fillConfig();
             }
-            const { exp, ok } = Store.saveExperiment(spec.id, { id: app.state.savedId, module: spec.id, name: app.cfg.name, cfg: app.cfg, rows: app.rows, plan: app.state.plan });
+            const { exp, ok } = Store.saveExperiment(spec.id, { id: app.state.savedId, module: spec.id, name: app.cfg.name, cfg: app.cfg, rows: app.rows, plan: app.state.plan, extra: app.state.extra });
             app.state.savedId = exp.id;
             saveDraft(); renderSaved();
             toast(ok ? 'Experimento guardado' : 'Guardado solo en memoria: exporte el JSON antes de cerrar', ok ? 'ok' : 'error');
@@ -337,7 +343,7 @@
             const e = Store.getExperiment(spec.id, id);
             if (!e) return;
             if (app.rows.length && !app.state.savedId && !confirm('Hay mediciones sin guardar en el borrador actual. ¿Reemplazarlas?')) return;
-            app.state = { cfg: deepMerge(spec.model.defaultConfig(), e.cfg), rows: e.rows.slice(), plan: e.plan || [], step: e.rows.length, savedId: e.id };
+            app.state = { cfg: deepMerge(spec.model.defaultConfig(), e.cfg), rows: e.rows.slice(), plan: e.plan || [], step: e.rows.length, savedId: e.id, extra: e.extra || null };
             saveDraft(); fillConfig(); showTab('resultados');
             toast(`Abierto: ${e.name}`, 'ok');
         }
@@ -346,7 +352,7 @@
             if (app.rows.length && !confirm('Se reemplazarán las mediciones actuales por datos de ejemplo. ¿Continuar?')) return;
             const cfg = spec.model.defaultConfig();
             cfg.name = 'EJEMPLO (datos simulados)';
-            app.state = { cfg, rows: [], plan: spec.model.buildPlan(cfg), step: 0, savedId: null };
+            app.state = { cfg, rows: [], plan: spec.model.buildPlan(cfg), step: 0, savedId: null, extra: null };
             const ex = spec.model.exampleData(cfg);
             spec.onExample && spec.onExample(app, ex);
             app.state.rows = ex.rows;
@@ -355,6 +361,83 @@
             toast('Datos de ejemplo cargados', 'ok');
         }
         app.loadExample = loadExample;
+
+        // ---------------- Protocolo imprimible (PDF) ----------------
+        /**
+         * Documento para llevar al laboratorio: datos del grupo, configuración, instrucciones de la guía
+         * y hoja de registro con el plan paso a paso y columnas en blanco para anotar a mano.
+         */
+        function buildProtocol() {
+            const cfg = app.cfg;
+            const plan = spec.model.buildPlan(cfg);
+            const mf = measureFields();
+            const title = document.title;
+            const sub = ($('.top .sub') || {}).textContent || '';
+
+            const guide = $('#tab-guia').cloneNode(true);
+            guide.removeAttribute('hidden');
+            $$('.actions, button, .no-print', guide).forEach(e => e.remove());
+            $$('[id]', guide).forEach(e => e.removeAttribute('id'));
+            $$('input[type=checkbox]', guide).forEach(e => { e.checked = false; e.removeAttribute('data-check'); });
+            $$('details', guide).forEach(d => d.setAttribute('open', ''));
+
+            const blank = label => `<div class="blank"><span>${esc(label)}</span><i></i></div>`;
+            const summary = spec.protocolSummary ? spec.protocolSummary(cfg) : [];
+            const cell = (f, v) => {
+                if (f.type === 'select') return esc(DIR_LABEL[v] || (f.options.find(o => String(o[0]) === String(v)) || [0, v])[1]);
+                return typeof v === 'number' ? fmt(v, f.decimals ?? 2) : esc(v ?? '');
+            };
+            const sheet = plan.length ? `
+                <table class="sheet">
+                    <thead><tr><th>#</th><th class="act">Acción</th>${spec.stepFields.map(f => `<th>${esc(f.short || f.label)}${f.unit ? `<br><small>${esc(f.unit)}</small>` : ''}</th>`).join('')}
+                        ${mf.map(f => `<th class="w">${esc(f.short || f.label)}${f.unit ? `<br><small>${esc(f.unit)}</small>` : ''}</th>`).join('')}<th class="obs">Obs.</th></tr></thead>
+                    <tbody>${plan.map((st, i) => `<tr><td>${i + 1}</td><td class="act">${esc(st.action)}</td>${spec.stepFields.map(f => `<td>${cell(f, st[f.key])}</td>`).join('')}
+                        ${mf.map(() => '<td class="w"></td>').join('')}<td class="obs"></td></tr>`).join('')}</tbody>
+                </table>` : '<p>Complete la Preparación para generar el plan de mediciones.</p>';
+
+            return `
+                <header class="p-head">
+                    <div><div class="p-kicker">Laboratorio de Calibración · Protocolo de ensayo</div>
+                        <h1>${esc(title)}</h1><p>${esc(sub)}</p></div>
+                    <div class="p-meta">${esc(cfg.name || 'Experimento sin nombre')}<br>Generado ${new Date().toLocaleDateString('es-CL')}</div>
+                </header>
+                <section class="p-block">
+                    <h2>Datos del ensayo</h2>
+                    <div class="blanks">${['Integrantes', 'Fecha', 'Hora inicio / término', 'Lugar', 'Equipo / N° de serie', 'Temperatura inicio / término (°C)', 'Responsable', 'Firma'].map(blank).join('')}</div>
+                </section>
+                ${summary.length ? `<section class="p-block"><h2>Configuración</h2>
+                    <table class="kv">${summary.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`).join('')}</table></section>` : ''}
+                <section class="p-block p-guide"><h2>Instrucciones</h2>${guide.innerHTML}</section>
+                <section class="p-block p-sheet"><h2>Hoja de registro</h2>
+                    <p class="small">Siga las acciones en orden. Anote lo que lee, no lo que espera. Si repite una medición, táchela (sin borrar) y anote la nueva en Obs.
+                        Después, ingrese los valores en la pestaña Medición.</p>
+                    ${sheet}
+                    ${spec.protocolExtra ? spec.protocolExtra(cfg) : ''}
+                </section>
+                <section class="p-block"><h2>Observaciones</h2><div class="lines">${'<i></i>'.repeat(6)}</div></section>`;
+        }
+
+        let savedTitle = null;
+        function prepareProtocol() {
+            let box = $('#protocol-print');
+            if (!box) { box = document.createElement('div'); box.id = 'protocol-print'; document.body.appendChild(box); }
+            box.innerHTML = buildProtocol();
+            document.body.classList.add('print-protocol');
+            if (savedTitle === null) savedTitle = document.title;
+            document.title = `Protocolo - ${savedTitle}${app.cfg.name ? ' - ' + app.cfg.name : ''}`; // nombre sugerido del PDF
+        }
+        function clearProtocol() {
+            document.body.classList.remove('print-protocol');
+            if (savedTitle !== null) { document.title = savedTitle; savedTitle = null; }
+        }
+        function printProtocol() {
+            prepareProtocol();
+            toast('En el diálogo elija “Guardar como PDF” como destino', 'info');
+            setTimeout(() => window.print(), 150);
+        }
+        window.addEventListener('afterprint', clearProtocol);
+        app.prepareProtocol = prepareProtocol;
+        app.clearProtocol = clearProtocol;
 
         function bindGoto(ctx) {
             $$('[data-goto]', ctx).forEach(a => a.addEventListener('click', e => { e.preventDefault(); showTab(a.dataset.goto); }));
@@ -369,7 +452,8 @@
             }));
             $('#btn-plan') && $('#btn-plan').addEventListener('click', startPlan);
             $$('[data-action=example]').forEach(b => b.addEventListener('click', loadExample));
-            $$('[data-action=print]').forEach(b => b.addEventListener('click', () => { showTab('resultados'); setTimeout(() => window.print(), 100); }));
+            $$('[data-action=print]').forEach(b => b.addEventListener('click', () => { clearProtocol(); showTab('resultados'); setTimeout(() => window.print(), 100); }));
+            $$('[data-action=protocol]').forEach(b => b.addEventListener('click', printProtocol));
             $$('[data-check]').forEach((cb, i) => {
                 const k = `check:${spec.id}:${i}`;
                 cb.checked = !!Store.read(k, false);
@@ -385,6 +469,7 @@
         }
 
         app.init = init;
+        root.labApp = app;
         return app;
     }
 

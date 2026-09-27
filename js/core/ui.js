@@ -116,26 +116,38 @@
         const W = 640, H = 340, m = { l: 64, r: 16, t: 14, b: 48 };
         const series = opts.series.filter(s => s.points && s.points.length);
         const tx = v => opts.xlog ? Math.log10(v) : v;
+        const ty = v => opts.ylog ? Math.log10(v) : v;
         const allX = series.flatMap(s => s.points.map(p => tx(p[0])));
-        const allY = series.flatMap(s => s.points.flatMap((p, i) => s.err ? [p[1] - s.err[i], p[1] + s.err[i]] : [p[1]]))
-            .concat((opts.hlines || []).map(h => h.y));
-        const [x0, x1] = extent(allX), [y0, y1] = extent(allY, 0.1);
+        const allY = series.flatMap(s => s.points.flatMap((p, i) => s.err && !opts.ylog ? [p[1] - s.err[i], p[1] + s.err[i]] : [p[1]]))
+            .concat((opts.hlines || []).map(h => h.y)).map(ty).filter(isFinite);
+        let [x0, x1] = extent(allX), [y0, y1] = extent(allY, 0.1);
+        if (opts.equal) {
+            // misma escala en x e y (trayectorias, círculos): se amplía el eje más corto
+            const pw = W - m.l - m.r, ph = H - m.t - m.b;
+            const scale = Math.max((x1 - x0) / pw, (y1 - y0) / ph);
+            const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+            x0 = cx - scale * pw / 2; x1 = cx + scale * pw / 2;
+            y0 = cy - scale * ph / 2; y1 = cy + scale * ph / 2;
+        }
         const X = v => m.l + (tx(v) - x0) / (x1 - x0) * (W - m.l - m.r);
         const Xr = v => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r);
-        const Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+        const Yr = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+        const Y = v => Yr(ty(v));
 
         let g = '';
         const sx = niceStep(x1 - x0), sy = niceStep(y1 - y0);
+        // decimales según el paso: evita marcas repetidas ("12,0 12,0 12,0") en rangos estrechos
+        const tickLab = (v, step) => Math.abs(v) >= 1e5 ? sig(v, 3) : fmt(v, Math.max(0, Math.ceil(-Math.log10(step) - 1e-9)));
         for (let v = Math.ceil(x0 / sx) * sx; v <= x1; v += sx) {
             if (Math.abs(v) < sx * 1e-6) v = 0;
-            const lab = opts.xlog ? sig(10 ** v, 2) : sig(+v.toPrecision(10), 3);
+            const lab = opts.xlog ? sig(10 ** v, 2) : tickLab(v, sx);
             g += `<line class="grid" x1="${Xr(v)}" x2="${Xr(v)}" y1="${m.t}" y2="${H - m.b}"/><text class="tick" x="${Xr(v)}" y="${H - m.b + 16}" text-anchor="middle">${lab}</text>`;
         }
         for (let v = Math.ceil(y0 / sy) * sy; v <= y1; v += sy) {
             if (Math.abs(v) < sy * 1e-6) v = 0;
-            g += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="${m.l - 6}" y="${Y(v) + 4}" text-anchor="end">${sig(+v.toPrecision(10), 3)}</text>`;
+            g += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Yr(v)}" y2="${Yr(v)}"/><text class="tick" x="${m.l - 6}" y="${Yr(v) + 4}" text-anchor="end">${opts.ylog ? sig(10 ** v, 2) : tickLab(v, sy)}</text>`;
         }
-        if (y0 < 0 && y1 > 0) g += `<line class="axis0" x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+        if (!opts.ylog && y0 < 0 && y1 > 0) g += `<line class="axis0" x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
         (opts.hlines || []).forEach(h => {
             g += `<line class="hline" x1="${m.l}" x2="${W - m.r}" y1="${Y(h.y)}" y2="${Y(h.y)}"/>`;
             if (h.label) g += `<text class="tick" x="${W - m.r - 4}" y="${Y(h.y) - 4}" text-anchor="end">${esc(h.label)}</text>`;
@@ -144,10 +156,13 @@
         series.forEach((s, si) => {
             const c = `var(--c${s.color || si + 1})`;
             if (s.kind === 'line') {
-                const pts = [...s.points].sort((a, b) => a[0] - b[0]);
-                g += `<polyline fill="none" style="stroke:${c}" stroke-width="2" points="${pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}"/>`;
+                let pts = s.sort === false ? s.points : [...s.points].sort((a, b) => a[0] - b[0]);
+                if (pts.length > 1500) { const st = Math.ceil(pts.length / 1500); pts = pts.filter((_, i) => i % st === 0); }
+                g += `<polyline fill="none" style="stroke:${c}" stroke-width="${s.width || 2}" stroke-linejoin="round" points="${pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}"/>`;
             } else {
+                const stp = s.points.length > 800 ? Math.ceil(s.points.length / 800) : 1;
                 s.points.forEach((p, i) => {
+                    if (i % stp) return;
                     if (s.err && isFinite(s.err[i])) g += `<line style="stroke:${c}" opacity=".5" x1="${X(p[0])}" x2="${X(p[0])}" y1="${Y(p[1] - s.err[i])}" y2="${Y(p[1] + s.err[i])}"/>`;
                     g += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="3.6" style="fill:${c}" fill-opacity=".85"><title>${sig(p[0], 5)} ; ${sig(p[1], 5)}</title></circle>`;
                 });

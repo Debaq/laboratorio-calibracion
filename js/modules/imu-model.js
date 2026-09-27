@@ -28,6 +28,18 @@
     'use strict';
 
     const AXES = ['pitch', 'roll', 'yaw'];
+    /**
+     * Ejes que entrega cada tipo de sensor:
+     *  acc3 (acelerómetro solo) e incl (inclinómetro): pitch y roll — la gravedad no "ve" giros horizontales.
+     *  imu6 (acel + giro): los tres, pero yaw es relativo y deriva.  imu9: los tres absolutos.
+     */
+    const DOF = {
+        acc3: { label: 'Acelerómetro 3 DOF (inclinación por gravedad)', axes: ['pitch', 'roll'] },
+        incl: { label: 'Inclinómetro (1–2 ejes)', axes: ['pitch', 'roll'] },
+        imu6: { label: 'IMU 6 DOF (acelerómetro + giroscopio)', axes: AXES },
+        imu9: { label: 'IMU 9 DOF (+ magnetómetro) / BNO055', axes: AXES }
+    };
+    const axesFor = cfg => (DOF[(cfg.sensor || {}).dof] || DOF.imu9).axes;
     const DEG = P.DEG;
 
     /** Diferencia angular envuelta a (−180, 180]. Necesaria para yaw (heading 0–360°). */
@@ -39,7 +51,7 @@
     function defaultConfig() {
         return {
             name: '',
-            sensor: { model: 'BNO055', maker: 'Bosch', mode: 'NDOF', notes: '' },
+            sensor: { model: 'BNO055', maker: 'Bosch', dof: 'imu9', mode: 'NDOF', notes: '' },
             axis: 'pitch',
             refMethod: 'seno',
             L_mm: 1000,       // pivote → punto donde se mide d
@@ -131,7 +143,7 @@
     }
 
     // ---------------- Análisis ----------------
-    function baselines(rows) {
+    function baselines(rows, AXES) {
         const byCycle = S.groupBy(rows.filter(r => r.dir === 'cero'), r => r.cycle);
         const all = rows.filter(r => r.dir === 'cero');
         const base = {}, drift = [];
@@ -150,8 +162,10 @@
 
     function analyze(cfg, rows) {
         const warnings = [];
+        const AXES = axesFor(cfg);
+        if (!AXES.includes(cfg.axis)) return { ok: false, warnings: [`Un ${DOF[cfg.sensor.dof].label} no mide ${cfg.axis}: la gravedad no cambia al girar en horizontal.`] };
         const valid = rows.filter(r => AXES.every(a => isFinite(r[a])) && isFinite(r.ref));
-        const { base, drift, hasZeros } = baselines(valid);
+        const { base, drift, hasZeros } = baselines(valid, AXES);
         if (!hasZeros) warnings.push('No hay lecturas de CERO: los offsets de montaje quedan mezclados con el error.');
 
         const pts = valid.filter(r => r.dir !== 'cero').map(r => {
@@ -211,6 +225,8 @@
         drift.forEach(d => {
             if (Math.abs(d[cfg.axis]) > 0.5) warnings.push(`Deriva del cero en ciclo ${d.cycle}: ${d[cfg.axis].toFixed(2)}° en ${cfg.axis}.`);
         });
+        if (cfg.axis === 'yaw' && cfg.sensor.dof === 'imu6')
+            warnings.push('Yaw de una IMU 6 DOF es la integral del giroscopio: deriva con el tiempo. Haga ciclos cortos y compare los ceros inicial y final.');
         if (cfg.axis === 'yaw' && cfg.sensor.mode === 'NDOF')
             warnings.push('Yaw en modo NDOF depende del magnetómetro: evite metales cercanos o use modo IMU (sin magnetómetro) para giros relativos.');
 
@@ -302,7 +318,7 @@
             const e = expectedAngle(cfg, step.ref);
             const th = step.dir === 'cero' ? 0 : e.thetaExp;
             const r = { cycle: step.cycle, dir: step.dir, ref: step.ref };
-            AXES.forEach(a => {
+            axesFor(cfg).forEach(a => {
                 let v = truth.mount[a] + gauss(truth.noise);
                 if (a === cfg.axis) v += truth.offset * (th !== 0) + truth.gain * th + (step.dir === 'baja' ? -truth.hyst : step.dir === 'sube' ? truth.hyst : 0) / 2;
                 else v += truth.cross[a] * th;
@@ -313,5 +329,5 @@
         return { rows, truth };
     }
 
-    return { AXES, wrapDeg, defaultConfig, buildPlan, referenceAngle, expectedAngle, analyze, correctionFormula, multiAxis, flexion, exampleData };
+    return { AXES, DOF, axesFor, wrapDeg, defaultConfig, buildPlan, referenceAngle, expectedAngle, analyze, correctionFormula, multiAxis, flexion, exampleData };
 });

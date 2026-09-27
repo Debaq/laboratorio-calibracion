@@ -34,6 +34,23 @@
             return null;
         },
 
+        protocolSummary(cfg) {
+            const rho = P.waterDensity(cfg.water.temp), g = P.gLocal(cfg.env.lat, cfg.env.alt);
+            return [
+                ['Sensor', esc(`${cfg.sensor.model} · ${cfg.sensor.maker} · salida en ${cfg.sensor.outputUnit} · FS ${fmt(cfg.sensor.FS_Pa, 0)} Pa`)],
+                ['Manómetro', cfg.mode === 'U' ? 'Tubo en U: leer h_A (rama presurizada) y h_B (rama abierta)' : `Columna con estanque: h₀ = ${fmt(cfg.h0_mm, 1)} mm`],
+                ['Regla', `resolución ${fmt(cfg.resRuler_mm, 1)} mm`],
+                ['Agua', `${fmt(cfg.water.temp, 1)} °C → ρ = ${fmt(rho, 3)} kg/m³ · g = ${fmt(g, 5)} m/s²`],
+                ['Niveles de Δh', `${cfg.levels.map(v => fmt(v, 0)).join(' ; ')} mm`],
+                ['Ciclos', `${cfg.cycles}${cfg.bidirectional ? ' · subiendo y bajando' : ''}`],
+                ['Tolerancia', `±${fmt(cfg.tol_pctFS, 2)} % FS`]
+            ];
+        },
+        protocolExtra(cfg) {
+            const k = (P.waterDensity(cfg.water.temp) - 1.2) * P.gLocal(cfg.env.lat, cfg.env.alt) / 1000;
+            return `<h3>Presión esperada en cada nivel</h3>` + table(['Δh (mm)', 'ΔP (Pa)', 'ΔP (kPa)', '% FS'],
+                [...cfg.levels].sort((a, b) => a - b).map(v => [fmt(v, 0), fmt(k * v, 1), fmt(k * v / 1000, 3), fmt(100 * k * v / cfg.sensor.FS_Pa, 1)]));
+        },
         fillConfig: rhoInfo,
         onConfigChange: rhoInfo,
         extraSavedAction: e => `<button data-cal="${e.id}">Ecuación</button>`,

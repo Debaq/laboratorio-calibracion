@@ -10,7 +10,7 @@
     <header class="top"><div class="inner">
         <a class="back" href="index.html">← Inicio</a>
         <h1>Posturógrafo IMU</h1>
-        <p class="sub">Calibración angular de un sensor inercial montado en la barra del posturógrafo.</p>
+        <p class="sub">Calibración del ángulo que entrega una IMU (3, 6 o 9 DOF) o un inclinómetro montado en la barra del posturógrafo.</p>
         <div id="status"></div>
     </div>
     <nav class="tabs" role="tablist">
@@ -97,7 +97,8 @@ u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
                 <li><strong>Ángulos de Euler grandes</strong>: con inclinaciones mayores a ~30° en dos ejes a la vez, los ángulos de Euler se acoplan por definición (no es un defecto del sensor).</li>
             </ul>
             <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
-                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button></div>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button></div>
         </section>
 
         <!-- ================= PREPARACIÓN ================= -->
@@ -108,6 +109,13 @@ u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
                     <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: Pitch ±15° — grupo 3 — 2026-09-25"></div>
                     <div class="field"><label>Modelo del IMU</label><input type="text" data-bind="sensor.model"></div>
                     <div class="field"><label>Fabricante</label><input type="text" data-bind="sensor.maker"></div>
+                    <div class="field"><label>Tipo de sensor</label>
+                        <select data-bind="sensor.dof">
+                            <option value="imu9">IMU 9 DOF (+ magnetómetro) / BNO055</option>
+                            <option value="imu6">IMU 6 DOF (acelerómetro + giroscopio)</option>
+                            <option value="acc3">Acelerómetro 3 DOF (inclinación por gravedad)</option>
+                            <option value="incl">Inclinómetro (1–2 ejes)</option>
+                        </select><div class="help">3 DOF e inclinómetro solo miden pitch y roll. Calibre antes los sensores crudos en <a href="imu-crudo.html">IMU: sensores crudos</a>.</div></div>
                     <div class="field"><label>Modo de fusión</label>
                         <select data-bind="sensor.mode">
                             <option value="NDOF">NDOF (acel + giro + magnetómetro)</option>
@@ -200,6 +208,7 @@ u(θ)² = (u_d / (L·cos θ))² + (tan θ · u_L / L)²</div>
             <div class="actions">
                 <button type="button" class="primary" id="btn-plan">Generar plan y comenzar →</button>
                 <button type="button" data-action="example">Cargar datos de ejemplo</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button>
             </div>
         </section>
 

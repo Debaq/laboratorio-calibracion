@@ -141,6 +141,7 @@ tr:last-child td { border-bottom: 0; }
 td { font-variant-numeric: tabular-nums; }
 table.compact th, table.compact td { padding: 4px 8px; }
 table.matrix td { text-align: right; font-family: var(--mono); }
+table.matrix td:first-child { text-align: left; font-family: var(--font); }
 
 .badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .78rem; font-weight: 700; }
 .badge.ok { background: var(--ok-soft); color: var(--ok); }
@@ -201,3 +202,45 @@ footer.foot { max-width: 1100px; margin: 0 auto; padding: 24px 16px 40px; color:
     .card, .plot, .kpi { box-shadow: none; break-inside: avoid; }
     main { max-width: none; padding: 0; }
 }
+
+/* ---------- Protocolo de ensayo (se imprime / guarda como PDF) ---------- */
+#protocol-print { display: none; }
+@media print {
+    @page { size: A4; margin: 14mm 12mm; }
+    body.print-protocol > *:not(#protocol-print) { display: none !important; }
+    body.print-protocol #protocol-print { display: block !important; }
+}
+#protocol-print { font-size: 10pt; line-height: 1.4; color: #000; }
+#protocol-print h1 { font-size: 17pt; margin: 2px 0; }
+#protocol-print h2 { font-size: 12.5pt; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 1.5px solid #000; break-after: avoid; }
+#protocol-print h3 { font-size: 11pt; margin: 10px 0 4px; break-after: avoid; }
+#protocol-print h4 { font-size: 10pt; margin: 8px 0 3px; }
+#protocol-print p, #protocol-print li { margin: 3px 0; }
+#protocol-print .p-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; border-bottom: 3px solid #000; padding-bottom: 6px; }
+#protocol-print .p-kicker { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .08em; }
+#protocol-print .p-head p { margin: 0; }
+#protocol-print .p-meta { text-align: right; font-size: 9pt; }
+#protocol-print .blanks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+#protocol-print .blank { display: flex; gap: 6px; align-items: flex-end; }
+#protocol-print .blank span { white-space: nowrap; font-weight: 600; font-size: 9pt; }
+#protocol-print .blank i { flex: 1; border-bottom: 1px solid #000; height: 18px; }
+#protocol-print .lines i { display: block; border-bottom: 1px solid #999; height: 24px; }
+#protocol-print table { border-collapse: collapse; width: 100%; font-size: 9pt; background: none; }
+#protocol-print th, #protocol-print td { border: 1px solid #777; padding: 3px 5px; vertical-align: top; }
+#protocol-print th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+#protocol-print thead { display: table-header-group; }
+#protocol-print tr { break-inside: avoid; }
+#protocol-print .table-wrap { border: 0; overflow: visible; }
+#protocol-print table.kv th { width: 38%; text-align: left; }
+#protocol-print table.sheet td { height: 30px; }
+#protocol-print table.sheet .act { font-size: 8.5pt; width: 36%; }
+#protocol-print table.sheet .w { min-width: 58px; }
+#protocol-print table.sheet .obs { width: 12%; }
+#protocol-print .math, #protocol-print pre { background: none; border: 1px solid #bbb; font-size: 8.5pt; padding: 6px 8px; white-space: pre-wrap; break-inside: avoid; }
+#protocol-print .callout { background: none !important; border: 1px solid #000; border-left-width: 4px; padding: 6px 10px; }
+#protocol-print .card { box-shadow: none; border: 1px solid #bbb; padding: 6px 10px; margin: 6px 0; }
+#protocol-print .check { padding: 2px 0; }
+#protocol-print .steps > li { padding: 0 0 6px 30px; }
+#protocol-print .steps > li::before { width: 20px; height: 20px; font-size: 8pt; background: #000 !important; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+#protocol-print .p-sheet { break-before: page; }
+#protocol-print .small { font-size: 8.5pt; }

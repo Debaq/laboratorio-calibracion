@@ -9,8 +9,9 @@
 <body>
     <header class="hero">
         <h1>Laboratorio de Calibración</h1>
-        <p>Guías y herramientas para calibrar los sensores de un posturógrafo y de sistemas de medición de presión y caudal.
-            Cada módulo explica qué hacer, genera el plan de mediciones paso a paso y calcula el error, la repetibilidad y la incertidumbre.</p>
+        <p>Guías y herramientas para calibrar los sensores que se usan con placas de desarrollo (Arduino, ESP32…): posturógrafos, presión, caudal,
+            temperatura, humedad, distancia, fuerza, luz, pH y más. Cada módulo explica qué hacer, genera el plan de mediciones paso a paso,
+            calcula error, repetibilidad e incertidumbre, y entrega la ecuación de corrección y un protocolo en PDF.</p>
         <div class="flow" aria-label="Flujo de trabajo">
             <span>1 · Leer la guía</span>→<span>2 · Preparar el montaje</span>→<span>3 · Medir siguiendo el plan</span>→<span>4 · Interpretar resultados</span>→<span>5 · Guardar e informar</span>
         </div>
@@ -20,9 +21,14 @@
         <h2>Posturografía</h2>
         <div class="modules">
             <a class="module" href="imu.html">
-                <span class="tag">Sensor inercial</span>
+                <span class="tag">Sensor inercial · ángulo</span>
                 <h3>Posturógrafo IMU</h3>
-                <p>Calibra el ángulo de un IMU (BNO055, MPU6050, …) contra una referencia geométrica. Ganancia, offset, acoplamiento entre ejes, histéresis, flexión de la barra y matriz de corrección 3D.</p>
+                <p>Calibra el ángulo de una IMU de 3, 6 o 9 DOF o de un inclinómetro contra una referencia geométrica. Ganancia, offset, acoplamiento entre ejes, histéresis, flexión de la barra y matriz de corrección 3D.</p>
+            </a>
+            <a class="module" href="imu-crudo.html">
+                <span class="tag">Sensor inercial · crudo</span>
+                <h3>IMU: acelerómetro, giroscopio, magnetómetro</h3>
+                <p>Acelerómetro por 6 posiciones (escala, sesgo, desalineación), giroscopio (sesgo, Allan, escala por giro conocido) y magnetómetro (hierro duro y blando).</p>
             </a>
             <a class="module" href="balanza.html">
                 <span class="tag">Plataforma de fuerza</span>
@@ -50,6 +56,11 @@
             </a>
         </div>
 
+        <h2 id="catalogo">Catálogo de sensores</h2>
+        <p class="muted">Cada sensor tiene su guía, referencia recomendada, plan de medición y modelo de curva. Si el suyo no está, use el <a href="sensor.html?p=generico">sensor genérico</a>.</p>
+        <div class="field" style="max-width:420px"><input type="text" id="buscar" placeholder="Buscar sensor (ej. DHT22, NTC, HC-SR04, pH)…" aria-label="Buscar sensor"></div>
+        <div id="catalog"></div>
+
         <h2>Antes de empezar</h2>
         <div class="card">
             <p><a href="fundamentos.html"><strong>Fundamentos de calibración →</strong></a> Qué es error, sesgo, repetibilidad, histéresis, incertidumbre y cómo decidir si un sensor “cumple”.
@@ -58,6 +69,36 @@
                 Para cambiar de computador use “Respaldo completo” en la pestaña Guardados de cualquier módulo.</p>
         </div>
     </main>
+
+    <script src="js/core/physics.js"></script>
+    <script src="js/perfiles/registry.js"></script>
+    <script src="js/perfiles/temperatura.js"></script>
+    <script src="js/perfiles/humedad.js"></script>
+    <script src="js/perfiles/distancia.js"></script>
+    <script src="js/perfiles/fuerza-electricos.js"></script>
+    <script src="js/perfiles/varios.js"></script>
+    <script src="js/perfiles/biomedicos.js"></script>
+    <script>
+        (function () {
+            const R = window.LabProfiles;
+            const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            function render(q) {
+                const nq = norm(q || '');
+                const html = R.FAMILIES.map(f => {
+                    const items = R.list().filter(p => p.family === f.id && (!nq || norm(`${p.name} ${p.examples} ${p.quantity} ${f.name}`).includes(nq)));
+                    if (!items.length) return '';
+                    return `<h3>${esc(f.name)}</h3><div class="modules">${items.map(p => `
+                        <a class="module" href="sensor.html?p=${p.id}">
+                            <span class="tag">${esc(p.quantity)} · ${p.mode === 'comparacion' ? 'comparación' : 'calibración'}</span>
+                            <h3>${esc(p.name)}</h3><p>${esc(p.examples || '')}</p></a>`).join('')}</div>`;
+                }).join('');
+                document.getElementById('catalog').innerHTML = html || '<p class="muted">Ningún sensor coincide. Pruebe con el <a href="sensor.html?p=generico">sensor genérico</a>.</p>';
+            }
+            document.getElementById('buscar').addEventListener('input', e => render(e.target.value));
+            render('');
+        })();
+    </script>
 
     <footer class="foot">
         Laboratorio de Calibración · Universidad Austral de Chile · Nicolás Biaer y Vanessa Uribe

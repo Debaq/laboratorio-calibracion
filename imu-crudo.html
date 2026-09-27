@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMU: sensores crudos</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <header class="top"><div class="inner">
+        <a class="back" href="index.html">← Inicio</a>
+        <h1>IMU: acelerómetro, giroscopio y magnetómetro</h1>
+        <p class="sub">Calibración de los sensores crudos de una IMU de 3, 6 o 9 DOF (MPU6050, MPU9250, ICM-20948, LSM6DS3, BNO055 en modo crudo…).</p>
+        <div id="status"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button data-tab="guia"><span class="num">1</span>Guía</button>
+        <button data-tab="config"><span class="num">2</span>Preparación</button>
+        <button data-tab="medir"><span class="num">3</span>Acelerómetro</button>
+        <button data-tab="resultados"><span class="num">4</span>Resultados acel.</button>
+        <button data-tab="giro"><span class="num">5</span>Giroscopio</button>
+        <button data-tab="mag"><span class="num">6</span>Magnetómetro</button>
+        <button data-tab="guardados"><span class="num">7</span>Guardados</button>
+    </nav></header>
+
+    <main>
+        <section class="panel" id="tab-guia">
+            <div class="callout"><strong>Objetivo:</strong> corregir los errores de fábrica de cada sensor ANTES de calcular ángulos. Un sesgo de 0,02 g en el acelerómetro
+                ya produce 1,1° de error de inclinación, y un sesgo de 1 °/s en el giroscopio acumula 60° en un minuto de integración.</div>
+
+            <h2>¿Qué calibrar según el tipo de IMU?</h2>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Tipo</th><th>Sensores</th><th>Qué calibrar aquí</th><th>Después</th></tr></thead>
+                <tbody>
+                    <tr><td>3 DOF acelerómetro</td><td>ADXL345, MMA8452, LIS3DH</td><td>Acelerómetro (6 posiciones)</td><td rowspan="4">Ángulo final en el módulo <a href="imu.html">Posturógrafo IMU</a></td></tr>
+                    <tr><td>3 DOF giroscopio</td><td>L3GD20, ITG3200</td><td>Giroscopio (reposo + giro)</td></tr>
+                    <tr><td>6 DOF</td><td>MPU6050, LSM6DS3, BMI160</td><td>Acelerómetro + giroscopio</td></tr>
+                    <tr><td>9 DOF</td><td>MPU9250, ICM-20948, LSM9DS1</td><td>Los tres</td></tr>
+                </tbody>
+            </table></div>
+            <p class="muted small">El BNO055 calibra sus sensores internamente (estado SYS/GYR/ACC/MAG = 3). Aun así conviene verificar su salida de ángulo en el módulo Posturógrafo IMU.</p>
+
+            <h2>1 · Acelerómetro: método de 6 posiciones</h2>
+            <p>En reposo el acelerómetro mide solo la gravedad (1 g hacia arriba). Poniendo cada eje hacia arriba y hacia abajo se obtiene todo el modelo de error, sin equipos:</p>
+            <div class="math">lectura = S · a + b          a = ±g·eᵢ en cada posición
+
+columna i de S = (L(+i) − L(−i)) / (2g)      → escala (diagonal) y desalineación (fuera de la diagonal)
+b              = (L(+i) + L(−i)) / 2         → sesgo (3 estimaciones que deben coincidir)
+corrección:    a = S⁻¹ · (lectura − b)</div>
+            <p>g se calcula con la latitud (Valdivia 9,8015 m/s²). Use una caja o bloque bien escuadrado como apoyo y una superficie nivelada: un desnivel de 1° equivale a 0,017 g.</p>
+
+            <h2>2 · Giroscopio</h2>
+            <ul>
+                <li><strong>Reposo (10–30 min)</strong>: el promedio es el <strong>sesgo</strong>. La <strong>desviación de Allan</strong> separa el ruido blanco (ARW, °/√h: cuánto crece el error del ángulo integrado)
+                    de la inestabilidad del sesgo (°/h: el piso de la curva).</li>
+                <li><strong>Giro de ángulo conocido</strong>: gire la placa exactamente 360° (o 90° contra una escuadra) alrededor de un eje, partiendo y terminando quieta.
+                    La integral de la velocidad, menos el sesgo, debe dar el ángulo: la diferencia es el error de escala.</li>
+            </ul>
+            <div class="math">θ_medido = ∫ (ω − sesgo) dt          error de escala = θ_medido / θ_verdadero − 1</div>
+
+            <h2>3 · Magnetómetro: hierro duro y blando</h2>
+            <p>Girando el sensor en todas direcciones, el campo terrestre (constante) debería dibujar una esfera centrada en 0. Los imanes y pistas cercanas la
+                <strong>desplazan</strong> (hierro duro) y los metales ferromagnéticos la <strong>deforman</strong> en elipsoide (hierro blando). Se ajusta el elipsoide y se corrige:</p>
+            <div class="math">m_corregido = W · (m_crudo − C)        C = centro (hierro duro),  W = deformación inversa (hierro blando)</div>
+            <p><strong>Calibre el magnetómetro montado en su lugar final</strong>: la corrección incluye los metales de SU montaje.</p>
+
+            <h2>Registro de datos (CSV)</h2>
+            <pre>// MPU6050 con librería Adafruit_MPU6050: imprime t_ms, aceleración (m/s²) y giro (rad/s)
+#include &lt;Adafruit_MPU6050.h&gt;
+Adafruit_MPU6050 mpu;
+void setup() {
+  Serial.begin(115200); mpu.begin();
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  Serial.println("t_ms,ax,ay,az,gx,gy,gz");
+}
+void loop() {
+  sensors_event_t a, g, temp; mpu.getEvent(&amp;a, &amp;g, &amp;temp);
+  Serial.print(millis()); Serial.print(',');
+  Serial.print(a.acceleration.x, 4); Serial.print(','); Serial.print(a.acceleration.y, 4); Serial.print(','); Serial.print(a.acceleration.z, 4); Serial.print(',');
+  Serial.print(g.gyro.x, 5); Serial.print(','); Serial.print(g.gyro.y, 5); Serial.print(','); Serial.println(g.gyro.z, 5);
+  delay(10);   // ~100 Hz
+}</pre>
+            <p class="muted small">Para el magnetómetro imprima <code>t_ms,mx,my,mz</code> (µT o cuentas). El acelerómetro se ingresa a mano: el promedio de ~2 s en cada posición.</p>
+
+            <h2>Lista de verificación</h2>
+            <div class="card">
+                <label class="check"><input type="checkbox" data-check> Sensor encendido 10 min (deriva térmica del sesgo)</label>
+                <label class="check"><input type="checkbox" data-check> Placa firme sobre un bloque escuadrado; superficie nivelada</label>
+                <label class="check"><input type="checkbox" data-check> Rango del sensor fijo (±2 g, ±250 °/s) igual al del uso</label>
+                <label class="check"><input type="checkbox" data-check> Unidades de salida anotadas (m/s², g, cuentas; °/s o rad/s)</label>
+                <label class="check"><input type="checkbox" data-check> Magnetómetro montado en su lugar final, lejos de imanes</label>
+            </div>
+            <div class="actions"><button type="button" class="primary" data-goto="config">Ir a Preparación →</button>
+                <button type="button" data-action="example">Ver un ejemplo con datos simulados</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button></div>
+        </section>
+
+        <section class="panel" id="tab-config" hidden>
+            <div class="card"><h3>Sensor</h3>
+                <div class="grid three">
+                    <div class="field"><label>Nombre del experimento</label><input type="text" data-bind="name" placeholder="Ej: MPU6050 placa 3"></div>
+                    <div class="field"><label>Modelo</label><input type="text" data-bind="sensor.model"></div>
+                    <div class="field"><label>Fabricante</label><input type="text" data-bind="sensor.maker"></div>
+                    <div class="field"><label>Tipo</label><select data-bind="sensor.dof">
+                        <option value="acc3">3 DOF acelerómetro</option><option value="gyro3">3 DOF giroscopio</option>
+                        <option value="imu6">6 DOF (acel + giro)</option><option value="imu9">9 DOF (+ magnetómetro)</option></select></div>
+                    <div class="field"><label>Notas (rango, filtro DLPF, montaje)</label><input type="text" data-bind="sensor.notes"></div>
+                </div>
+            </div>
+            <div class="card"><h3>Acelerómetro</h3>
+                <div class="grid three">
+                    <div class="field"><label>Unidad de las lecturas</label><select data-bind="accUnit">
+                        <option value="ms2">m/s²</option><option value="g">g</option><option value="cuentas">cuentas crudas</option></select></div>
+                    <div class="field" data-show-if="accUnit=cuentas"><label>Sensibilidad nominal <small>(cuentas/g)</small></label><input type="text" inputmode="decimal" data-bind="countsPerG" data-type="number">
+                        <div class="help">MPU6050 ±2 g: 16384 · ±4 g: 8192</div></div>
+                    <div class="field"><label>Ciclos (vueltas por las 6 posiciones)</label><input type="text" inputmode="numeric" data-bind="cycles" data-type="number"></div>
+                    <div class="field"><label>Lecturas por posición</label><input type="text" inputmode="numeric" data-bind="reps" data-type="number"></div>
+                    <div class="field"><label>Tolerancia de sesgo <small>(g)</small></label><input type="text" inputmode="decimal" data-bind="tolBias_g" data-type="number"><div class="help">0,02 g ≈ 1,1° de inclinación</div></div>
+                    <div class="field"><label>Tolerancia de escala <small>(%)</small></label><input type="text" inputmode="decimal" data-bind="tolScale_pct" data-type="number"></div>
+                </div>
+            </div>
+            <div class="card"><h3>Giroscopio y magnetómetro</h3>
+                <div class="grid three">
+                    <div class="field"><label>Unidad del giroscopio</label><select data-bind="gyroUnit"><option value="dps">°/s</option><option value="rads">rad/s</option></select></div>
+                    <div class="field"><label>Campo magnético local <small>(µT)</small></label><input type="text" inputmode="decimal" data-bind="magField_uT" data-type="number">
+                        <div class="help">0 = normalizar al radio medio. Valor local: modelo WMM/IGRF (NOAA).</div></div>
+                    <div class="field"><label>Latitud <small>(°)</small></label><input type="text" inputmode="decimal" data-bind="env.lat" data-type="number"></div>
+                    <div class="field"><label>Altitud <small>(m)</small></label><input type="text" inputmode="decimal" data-bind="env.alt" data-type="number"></div>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="button" class="primary" id="btn-plan">Generar plan del acelerómetro →</button>
+                <button type="button" data-action="example">Cargar datos de ejemplo</button>
+                <button type="button" data-action="protocol">Descargar protocolo (PDF)</button>
+            </div>
+        </section>
+
+        <section class="panel" id="tab-medir" hidden><div id="measure"></div></section>
+        <section class="panel" id="tab-resultados" hidden>
+            <div class="actions no-print"><button type="button" data-action="print">Imprimir / guardar PDF</button></div>
+            <div id="results"></div>
+        </section>
+
+        <section class="panel" id="tab-giro" hidden>
+            <div class="card"><h3>1 · Reposo (sesgo, ruido, Allan)</h3>
+                <p class="muted small">Sensor quieto sobre una mesa sin vibraciones, 10–30 min. CSV con <code>t_ms,gx,gy,gz</code>. Solo se guarda el resumen (los registros largos no caben en el navegador).</p>
+                <textarea id="gs-text" rows="3" placeholder="t_ms,gx,gy,gz …"></textarea>
+                <div class="actions"><button type="button" class="primary" id="gs-run">Analizar texto</button>
+                    <label class="button">Abrir archivo<input type="file" id="gs-file" accept=".csv,.txt" hidden></label>
+                    <button type="button" id="gs-ex">Ejemplo simulado (10 min)</button></div>
+            </div>
+            <div class="card"><h3>2 · Giro de ángulo conocido (escala)</h3>
+                <p class="muted small">Quieta 2 s → giro de exactamente el ángulo indicado alrededor de UN eje (contra topes o escuadra) → quieta 2 s.</p>
+                <div class="grid three">
+                    <div class="field"><label>Eje del giro</label><select id="gr-axis"><option value="x">x</option><option value="y">y</option><option value="z" selected>z</option></select></div>
+                    <div class="field"><label>Ángulo verdadero <small>(°, con signo)</small></label><input type="text" id="gr-angle" inputmode="decimal" value="360"></div>
+                    <div class="field"><label>Nombre</label><input type="text" id="gr-name" placeholder="Ej: z +360 #1"></div>
+                </div>
+                <textarea id="gr-text" rows="3" placeholder="t_ms,gx,gy,gz …" style="margin-top:10px"></textarea>
+                <div class="actions"><button type="button" class="primary" id="gr-run">Agregar giro</button>
+                    <label class="button">Abrir archivo<input type="file" id="gr-file" accept=".csv,.txt" hidden></label>
+                    <button type="button" id="gr-ex">Ejemplo simulado</button></div>
+            </div>
+            <div id="giro-out"></div>
+        </section>
+
+        <section class="panel" id="tab-mag" hidden>
+            <div class="card"><h3>Registro de rotación</h3>
+                <p class="muted small">Gire lentamente el sensor (ya montado) en todas direcciones durante ~60 s, como dibujando un “8” en el aire con todas las caras. CSV con <code>t_ms,mx,my,mz</code>.</p>
+                <textarea id="mg-text" rows="3" placeholder="t_ms,mx,my,mz …"></textarea>
+                <div class="actions"><button type="button" class="primary" id="mg-run">Analizar texto</button>
+                    <label class="button">Abrir archivo<input type="file" id="mg-file" accept=".csv,.txt" hidden></label>
+                    <button type="button" id="mg-ex">Ejemplo simulado</button></div>
+            </div>
+            <div id="mag-out"></div>
+        </section>
+
+        <section class="panel" id="tab-guardados" hidden><div id="saved"></div></section>
+    </main>
+
+    <script src="js/core/linalg.js"></script>
+    <script src="js/core/stats.js"></script>
+    <script src="js/core/physics.js"></script>
+    <script src="js/core/uncertainty.js"></script>
+    <script src="js/core/signal.js"></script>
+    <script src="js/core/csv.js"></script>
+    <script src="js/core/store.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/modules/imucrudo-model.js"></script>
+    <script src="js/modules/imucrudo-ui.js"></script>
+</body>
+</html>

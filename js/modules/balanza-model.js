@@ -34,7 +34,10 @@
                 { name: 'C3 trasera der.', x: 180, y: -180 },
                 { name: 'C4 trasera izq.', x: -180, y: -180 }
             ],
-            masses_kg: [10, 20],
+            masses_kg: [20, 40, 60, 80],
+            maxUse_kg: 80,       // peso máximo de las personas que se evaluarán
+            positionMass_kg: 0,  // masa usada en las posiciones fuera del centro (0 = la mayor)
+            creep: true,         // prueba de fluencia al final (carga máxima sostenida 60 s)
             positions: [
                 { label: 'Centro', x: 0, y: 0 },
                 { label: 'Del. der.', x: 100, y: 100 },
@@ -53,17 +56,32 @@
         };
     }
 
+    const LOAD = new Set(['carga', 'descarga']);
+
+    /**
+     * Plan por ciclo: tara → escalera de masas en la PRIMERA posición (centro), subiendo y bajando
+     * (linealidad e histéresis) → una masa en cada una de las demás posiciones (CoP) → tara final.
+     * Al final, prueba de fluencia: carga máxima sostenida 60 s.
+     */
     function buildPlan(cfg) {
         const ms = [...cfg.masses_kg].filter(m => m > 0).sort((a, b) => a - b);
+        const mMax = ms[ms.length - 1];
+        const mPos = cfg.positionMass_kg > 0 ? cfg.positionMass_kg : mMax;
+        const [c0, ...others] = cfg.positions;
         const plan = [];
+        if (!c0 || !ms.length) return plan;
         for (let c = 1; c <= cfg.cycles; c++) {
             plan.push({ cycle: c, dir: 'tara', mass_kg: 0, x: 0, y: 0, action: `Ciclo ${c}: plataforma VACÍA. Espere 10 s y registre la TARA de las 4 celdas.` });
-            cfg.positions.forEach(p => {
-                ms.forEach(m => plan.push({ cycle: c, dir: 'carga', mass_kg: m, x: p.x, y: p.y, action: `Ciclo ${c} ↑: coloque ${m} kg centrados en ${p.label} (x = ${p.x}, y = ${p.y} mm). Espere 5 s y registre.` }));
-                if (cfg.bidirectional)
-                    [...ms].reverse().forEach(m => plan.push({ cycle: c, dir: 'descarga', mass_kg: m, x: p.x, y: p.y, action: `Ciclo ${c} ↓: retire masa hasta dejar ${m} kg en ${p.label}. Espere 5 s y registre.` }));
-            });
+            ms.forEach(m => plan.push({ cycle: c, dir: 'carga', mass_kg: m, x: c0.x, y: c0.y, action: `Ciclo ${c} ↑: complete ${m} kg en ${c0.label} (x = ${c0.x}, y = ${c0.y} mm) agregando masa, sin retirar. Espere 5 s y registre.` }));
+            if (cfg.bidirectional)
+                [...ms].reverse().slice(1).forEach(m => plan.push({ cycle: c, dir: 'descarga', mass_kg: m, x: c0.x, y: c0.y, action: `Ciclo ${c} ↓: retire masa hasta dejar ${m} kg en ${c0.label}. Espere 5 s y registre.` }));
+            others.forEach(p => plan.push({ cycle: c, dir: 'carga', mass_kg: mPos, x: p.x, y: p.y, action: `Ciclo ${c}: coloque ${mPos} kg centrados en ${p.label} (x = ${p.x}, y = ${p.y} mm). Espere 5 s y registre.` }));
             plan.push({ cycle: c, dir: 'tara', mass_kg: 0, x: 0, y: 0, action: `Ciclo ${c}: retire todo y registre la TARA final (deriva del cero).` });
+        }
+        if (cfg.creep) {
+            const c = cfg.cycles;
+            plan.push({ cycle: c, dir: 'fluencia0', mass_kg: mMax, x: c0.x, y: c0.y, action: `Fluencia: coloque ${mMax} kg en ${c0.label} e inicie un cronómetro. Registre apenas se estabilice (≈ 3 s).` });
+            plan.push({ cycle: c, dir: 'fluencia60', mass_kg: mMax, x: c0.x, y: c0.y, action: `Fluencia: SIN tocar nada, registre de nuevo cuando el cronómetro marque 60 s.` });
         }
         return plan;
     }
@@ -88,7 +106,7 @@
     function fitScale(cfg, rows, base, g) {
         const Lc = Math.max(...cfg.cells.map(c => Math.max(Math.abs(c.x), Math.abs(c.y)))) || 1;
         const A = [], b = [];
-        const used = rows.filter(r => r.dir !== 'tara' && r.mass_kg > 0 && base[r.cycle]);
+        const used = rows.filter(r => LOAD.has(r.dir) && r.mass_kg > 0 && base[r.cycle]);
         for (const r of used) {
             const d = raw(r).map((v, i) => v - base[r.cycle][i]);
             const W = r.mass_kg * g;
@@ -116,7 +134,7 @@
         if (!has) return { ok: false, warnings: ['Falta la TARA (plataforma vacía). Sin ella no se puede calibrar.'] };
         const g = P.gLocal(cfg.env.lat, cfg.env.alt);
 
-        const loads = valid.filter(r => r.dir !== 'tara' && r.mass_kg > 0);
+        const loads = valid.filter(r => LOAD.has(r.dir) && r.mass_kg > 0);
         const nPos = new Set(loads.map(r => `${r.x},${r.y}`)).size;
         if (loads.length < 2 || nPos < 2) return { ok: false, warnings: ['Se necesitan cargas en al menos 2 posiciones distintas (idealmente centro + 4 cuadrantes).'] };
 
@@ -172,6 +190,19 @@
         const conformF = maxErrFpct + 100 * U.expanded(uW) / FS <= cfg.tolFz_pct;
         const conformCoP = maxCoP + U.expanded(uPos) <= cfg.tolCoP_mm;
 
+        // Fluencia: misma carga sostenida 60 s
+        let creep = null;
+        const c0 = valid.filter(r => r.dir === 'fluencia0'), c60 = valid.filter(r => r.dir === 'fluencia60');
+        if (c0.length && c60.length) {
+            const a = evaluate(cfg, k, base, c0[c0.length - 1]), b = evaluate(cfg, k, base, c60[c60.length - 1]);
+            creep = { F0: a.Fz, F60: b.Fz, pct: 100 * (b.Fz - a.Fz) / a.Fz, copShift: Math.hypot(b.cx - a.cx, b.cy - a.cy) };
+            if (Math.abs(creep.pct) > 0.25 * cfg.tolFz_pct)
+                warnings.push(`Fluencia de ${creep.pct.toFixed(3)} % en 60 s: en un ensayo de 30–60 s se verá como una deriva lenta del CoP (${creep.copShift.toFixed(2)} mm). Considere celdas de mejor calidad o ensayos más cortos.`);
+        }
+        const mMaxCal = Math.max(...loads.map(r => r.mass_kg));
+        if (cfg.maxUse_kg > 0 && mMaxCal < 0.9 * cfg.maxUse_kg)
+            warnings.push(`La carga máxima calibrada (${mMaxCal} kg) es menor que el peso máximo de uso (${cfg.maxUse_kg} kg): sobre ${mMaxCal} kg la plataforma se usaría extrapolando. Agregue masas (sacos de arena, bidones de agua pesados).`);
+
         drift.forEach(d => {
             const N = d.counts.map((c, i) => c * k[i]);
             d.N = N; d.Ntot = S.sum(N);
@@ -182,7 +213,7 @@
             warnings.push('El error de CoP crece con cargas bajas (esperable: CoP = momento / fuerza). Informe la carga mínima válida.');
 
         return {
-            ok: true, warnings, g, k, seK, pts, fitF, byMass, byPos, drift, hystRows,
+            ok: true, warnings, g, k, seK, base, pts, fitF, byMass, byPos, drift, hystRows, creep,
             metrics: {
                 FS, gainF: fitF.coef[1], offsetF: fitF.coef[0], linF: S.maxAbs(fitF.residuals), linFpct: 100 * S.maxAbs(fitF.residuals) / FS,
                 rmsF, maxErrFpct, repF: repF.s, hystF: hyst, hystFpct: 100 * hyst / FS,
@@ -230,7 +261,7 @@ void calcular(const long raw[4], float &Fz, float &copX, float &copY) {
             drift += 3;
             const sh = share(st.x, st.y);
             const r = { cycle: st.cycle, dir: st.dir, mass_kg: st.mass_kg, x: st.x, y: st.y };
-            const hyst = st.dir === 'descarga' ? 1.002 : 1;
+            const hyst = (st.dir === 'descarga' ? 1.002 : 1) * (st.dir === 'fluencia60' ? 1.0004 : 1); // histéresis y fluencia simuladas
             [0, 1, 2, 3].forEach(i => {
                 r[`c${i + 1}`] = Math.round(truth.tare[i] + drift + (st.mass_kg * g * sh[i] * hyst) / truth.k[i] + gauss(truth.noise));
             });

@@ -16,15 +16,12 @@
             { key: 'dir', label: 'Tipo', type: 'select', options: [['cero', 'Cero'], ['sube', '↑ Sube'], ['baja', '↓ Baja']] },
             { key: 'ref', label: 'Referencia', short: 'Ref.', unit: 'mm / °', decimals: 2 }
         ],
-        measureFields: [
-            { key: 'pitch', label: 'Pitch IMU', unit: '°', hint: 'ej: 5,25' },
-            { key: 'roll', label: 'Roll IMU', unit: '°' },
-            { key: 'yaw', label: 'Yaw IMU', unit: '°' }
-        ],
+        measureFields: cfg => M.axesFor(cfg).map(a => ({ key: a, label: `${AX[a]} ${cfg.sensor.dof === 'incl' ? 'inclinómetro' : 'IMU'}`, unit: '°' })),
         measureNote: 'Lea los tres ángulos en el mismo instante (congele la pantalla o use el valor promedio de 1 s).',
 
         validateConfig(cfg) {
             if (!cfg.name) return 'Escriba un nombre para el experimento.';
+            if (!M.axesFor(cfg).includes(cfg.axis)) return `Un ${M.DOF[cfg.sensor.dof].label} no mide yaw: elija pitch o roll.`;
             if (cfg.refMethod === 'seno' && !(cfg.L_mm > 0)) return 'L debe ser positiva.';
             if (cfg.refMethod === 'cuerda' && !(cfg.r_mm > 0)) return 'r debe ser positivo.';
             if (cfg.levels.filter(v => v !== 0).length < 3) return 'Defina al menos 3 niveles distintos de cero.';
@@ -46,6 +43,25 @@
             return null;
         },
 
+        protocolSummary(cfg) {
+            const method = { seno: `Seno: d medido a L = ${fmt(cfg.L_mm, 0)} mm del pivote (u(L) = ${fmt(cfg.uL_mm, 1)} mm)`,
+                cuerda: `Cuerda a radio r = ${fmt(cfg.r_mm, 0)} mm (u(r) = ${fmt(cfg.uL_mm, 1)} mm)`, directo: 'Directo: inclinómetro / goniómetro' }[cfg.refMethod];
+            return [
+                ['Sensor', esc(`${cfg.sensor.model} · ${cfg.sensor.maker} · ${M.DOF[cfg.sensor.dof].label} · modo ${cfg.sensor.mode}`)],
+                ['Eje evaluado', AX[cfg.axis]],
+                ['Referencia', esc(method)],
+                ['Resolución referencia / IMU', `${fmt(cfg.resRef, 2)} ${refUnit(cfg)} / ${fmt(cfg.resImu, 4)}°`],
+                ['Tolerancia de aceptación', `±${fmt(cfg.tolerance_deg, 2)}°`],
+                ['Niveles', `${cfg.levels.map(v => fmt(v, 1)).join(' ; ')} ${refUnit(cfg)}`],
+                ['Ciclos', `${cfg.cycles}${cfg.bidirectional ? ' · subiendo y bajando' : ''}`],
+                ['Flexión de la barra', cfg.flex.enabled ? `se corrige: m = ${fmt(cfg.flex.tipMass_g, 0)} g, EI = ${sig(cfg.flex.EI_Nm2, 4)} N·m²` : 'no se corrige']
+            ];
+        },
+        protocolExtra(cfg) {
+            const lv = [...cfg.levels].filter(v => v !== 0).sort((a, b) => a - b);
+            return `<h3>Ángulo esperado en cada nivel (para verificar en el momento)</h3>` + table([`Nivel (${refUnit(cfg)})`, 'θ referencia (°)', 'θ esperado IMU (°)', 'U ref, k=2 (°)'],
+                lv.map(v => { const e = M.expectedAngle(cfg, v); return [fmt(v, 1), fmt(e.theta, 3), fmt(e.thetaExp, 3), fmt(2 * e.u, 3)]; }));
+        },
         setupConfig(app) { setupFlexTest(app); },
         fillConfig(app) { updatePreview(app); fillFlexTest(app); },
         onConfigChange(app) { updatePreview(app); },

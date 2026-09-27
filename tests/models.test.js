@@ -156,3 +156,13 @@ test('Pitot: recupera C', () => {
 test('Flujo: sin calibración de presión no analiza', () => {
     assert.equal(Flu.analyze(Flu.defaultConfig('venturi'), []).ok, false);
 });
+
+test('IMU: acelerómetro 3 DOF analiza sin yaw y rechaza evaluar yaw', () => {
+    const cfg = { ...Imu.defaultConfig(), sensor: { ...Imu.defaultConfig().sensor, dof: 'acc3' }, axis: 'roll', cycles: 3 };
+    const { rows } = Imu.exampleData(cfg);
+    assert.ok(rows.every(r => r.yaw === undefined));
+    const r = Imu.analyze(cfg, rows);
+    assert.ok(r.ok, r.warnings.join(' | '));
+    assert.equal(r.crosstalk.length, 1);
+    assert.equal(Imu.analyze({ ...cfg, axis: 'yaw' }, rows).ok, false);
+});

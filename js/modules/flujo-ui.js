@@ -37,6 +37,23 @@
             return null;
         },
 
+        protocolSummary(cfg) {
+            const fl = M.fluidProps(cfg);
+            const refTxt = { volumen: `volumétrica (u(V) = ${fmt(cfg.uVol_pct, 1)} %, u(t) = ${fmt(cfg.uTime_s, 2)} s)`, caudal: `caudalímetro (u = ${fmt(cfg.uRef_pct, 1)} %)`, velocidad: `anemómetro (u = ${fmt(cfg.uRef_pct, 1)} %)` }[cfg.refMode];
+            const rows = [];
+            if (isV) rows.push(['Geometría', `D = ${fmt(cfg.D_mm, 2)} mm · d = ${fmt(cfg.d_mm, 2)} mm · β = ${fmt(cfg.d_mm / cfg.D_mm, 3)}`],
+                ['Medición de presión', cfg.pressureMode === 'dos' ? 'dos sensores (P₁ y P₂)' : 'un sensor diferencial']);
+            else rows.push(['Ducto', `D = ${fmt(cfg.ductD_mm, 1)} mm${cfg.refMode === 'caudal' ? ` · factor de perfil ${fmt(cfg.profile, 3)}` : ''}`]);
+            rows.push(['Calibración de presión', cfg.calA ? esc(`${cfg.calA.name} (rango ${fmt(cfg.calA.Vmin, 3)}–${fmt(cfg.calA.Vmax, 3)} ${cfg.calA.outputUnit || 'V'})`) : '<strong>sin seleccionar</strong>'],
+                ['Fluido', `${cfg.fluid} · ${fmt(cfg.env.temp, 1)} °C · ρ = ${fmt(fl.rho, 4)} kg/m³`],
+                ['Referencia', refTxt],
+                ['Plan', `posiciones ${cfg.levels.join(' ; ')} · ${cfg.reps} repeticiones cada una`]);
+            return rows;
+        },
+        protocolExtra() {
+            return `<h3>Condiciones ambientales</h3><table class="kv"><tr><th></th><td><strong>Inicio</strong></td><td><strong>Término</strong></td></tr>
+                <tr><th>Temperatura (°C)</th><td></td><td></td></tr><tr><th>Presión atmosférica (hPa)</th><td></td><td></td></tr><tr><th>Humedad relativa (%)</th><td></td><td></td></tr></table>`;
+        },
         setupConfig: setupCal,
         fillConfig: fillCal,
         onConfigChange: (app, path) => { if (path === 'refMode' || path === 'pressureMode') app.saveDraft(); fluidInfo(app); },
