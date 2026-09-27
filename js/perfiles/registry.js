@@ -17,19 +17,18 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
+    // Familias por magnitud física (también agrupan los módulos especializados en el inicio)
     const FAMILIES = [
-        { id: 'temperatura', name: 'Temperatura' },
-        { id: 'humedad', name: 'Humedad y ambiente' },
-        { id: 'distancia', name: 'Distancia' },
+        { id: 'movimiento', name: 'Movimiento e inclinación' },
         { id: 'fuerza', name: 'Fuerza y peso' },
-        { id: 'electricos', name: 'Eléctricos' },
+        { id: 'presion', name: 'Presión y caudal' },
+        { id: 'temperatura', name: 'Temperatura' },
+        { id: 'humedad', name: 'Humedad, suelo y pH' },
+        { id: 'distancia', name: 'Distancia' },
         { id: 'luz', name: 'Luz' },
-        { id: 'angulo', name: 'Ángulo y deformación' },
-        { id: 'quimica', name: 'Química' },
-        { id: 'suelo', name: 'Suelo' },
-        { id: 'caudal', name: 'Caudal de líquidos' },
+        { id: 'electricos', name: 'Electricidad' },
         { id: 'biomedicos', name: 'Biomédicos' },
-        { id: 'otros', name: 'Otros sensores' }
+        { id: 'otros', name: 'Otros' }
     ];
 
     const list = [];

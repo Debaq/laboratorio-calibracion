@@ -65,7 +65,7 @@ que depende solo de la sal y (poco) de la temperatura:
     });
 
     R.register({
-        id: 'baro', family: 'humedad', name: 'Presión barométrica', examples: 'BMP280, BME280, BMP388, MS5611', mode: 'comparacion',
+        id: 'baro', family: 'presion', name: 'Presión barométrica', examples: 'BMP280, BME280, BMP388, MS5611', mode: 'comparacion',
         quantity: 'Presión absoluta', unit: 'hPa', symbol: 'p', sameUnits: true,
         reading: { label: 'Presión indicada', unit: 'hPa' },
         references: [

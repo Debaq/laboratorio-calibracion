@@ -48,7 +48,7 @@
     // ---------------- Ángulo ----------------
     const GONIO = [{ id: 'goniometro', label: 'Goniómetro / transportador fijo', u: 0.3, help: 'Transportador de 1°: u ≈ 0,3°. Para más exactitud use el módulo IMU (referencia por seno).' }];
     R.register({
-        id: 'potenciometro', family: 'angulo', name: 'Potenciómetro / encoder angular', examples: 'Potenciómetro rotatorio 10 k, AS5600 (magnético), encoder absoluto',
+        id: 'potenciometro', family: 'movimiento', name: 'Potenciómetro / encoder angular', examples: 'Potenciómetro rotatorio 10 k, AS5600 (magnético), encoder absoluto',
         quantity: 'Ángulo', unit: '°', symbol: 'θ',
         reading: { label: 'Cuentas del ADC', unit: 'cuentas' },
         references: GONIO, refRes: 1,
@@ -66,7 +66,7 @@
         example: { refJitter: 0, decimals: 0, levelToRef: lv => lv, forward: (a, cfg, row, g) => 511.5 + 3.79 * a + 0.0015 * a * a + g(0.8), hyst: 0.6 }
     });
     R.register({
-        id: 'flex', family: 'angulo', name: 'Sensor de flexión', examples: 'Flex sensor 2,2" y 4,5" (Spectra Symbol), sensores de guante',
+        id: 'flex', family: 'movimiento', name: 'Sensor de flexión', examples: 'Flex sensor 2,2" y 4,5" (Spectra Symbol), sensores de guante',
         quantity: 'Ángulo de flexión', unit: '°', symbol: 'θ',
         reading: { label: 'Resistencia', unit: 'Ω' },
         readingModes: [{ id: 'ohm', label: 'Resistencia (Ω)', unit: 'Ω' }, R.modes.adcDivider(10, 47000)],
@@ -87,7 +87,7 @@
 
     // ---------------- Química ----------------
     R.register({
-        id: 'ph', family: 'quimica', name: 'Electrodo de pH', examples: 'Electrodo de vidrio con módulo PH-4502C, Atlas Scientific, ADS1115',
+        id: 'ph', family: 'humedad', name: 'Electrodo de pH', examples: 'Electrodo de vidrio con módulo PH-4502C, Atlas Scientific, ADS1115',
         quantity: 'pH', unit: 'pH', symbol: 'pH',
         reading: { label: 'Potencial del electrodo', unit: 'mV' },
         readingModes: [{ id: 'mv', label: 'Potencial del electrodo (mV) — medidor de alta impedancia', unit: 'mV' },
@@ -135,7 +135,7 @@
 
     // ---------------- Suelo ----------------
     R.register({
-        id: 'suelo', family: 'suelo', name: 'Humedad de suelo capacitivo', examples: 'Sensor capacitivo v1.2/v2.0, EC-5, Teros',
+        id: 'suelo', family: 'humedad', name: 'Humedad de suelo capacitivo', examples: 'Sensor capacitivo v1.2/v2.0, EC-5, Teros',
         quantity: 'Contenido volumétrico de agua', unit: '%', symbol: 'θv',
         reading: { label: 'Cuentas del ADC', unit: 'cuentas' },
         references: [{ id: 'gravimetrico', label: 'Método gravimétrico (secado en horno)', u: 1, help: 'u incluye la variabilidad del suelo entre la zona del sensor y la muestra.' }],
@@ -169,7 +169,7 @@ Contenido volumétrico:   θv = w · ρ_aparente / ρ_agua      (en %)</div>
 
     // ---------------- Caudal ----------------
     R.register({
-        id: 'yfs201', family: 'caudal', name: 'Caudalímetro de turbina (pulsos)', examples: 'YF-S201, YF-S401, FS300A',
+        id: 'yfs201', family: 'presion', name: 'Caudalímetro de turbina (pulsos)', examples: 'YF-S201, YF-S401, FS300A',
         quantity: 'Volumen', unit: 'L', symbol: 'V',
         reading: { label: 'Pulsos contados', unit: 'pulsos' },
         references: [{ id: 'probeta', label: 'Volumen medido en probeta / balanza (1 g ≈ 1 mL)', u: 0.005, help: 'Con balanza: V = masa/ρ_agua. Es más exacto que la probeta.' }],

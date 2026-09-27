@@ -4,71 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorio de Calibración</title>
+    <meta name="description" content="Guías y herramientas para calibrar los sensores de proyectos con Arduino y ESP32: plan paso a paso, incertidumbre, ecuación de corrección y protocolo PDF.">
     <link rel="stylesheet" href="css/lab.css">
 </head>
-<body>
-    <header class="hero">
-        <h1>Laboratorio de Calibración</h1>
-        <p>Guías y herramientas para calibrar los sensores que se usan con placas de desarrollo (Arduino, ESP32…): posturógrafos, presión, caudal,
-            temperatura, humedad, distancia, fuerza, luz, pH y más. Cada módulo explica qué hacer, genera el plan de mediciones paso a paso,
-            calcula error, repetibilidad e incertidumbre, y entrega la ecuación de corrección y un protocolo en PDF.</p>
-        <div class="flow" aria-label="Flujo de trabajo">
-            <span>1 · Leer la guía</span>→<span>2 · Preparar el montaje</span>→<span>3 · Medir siguiendo el plan</span>→<span>4 · Interpretar resultados</span>→<span>5 · Guardar e informar</span>
+<body class="home">
+    <header class="home-hero">
+        <div class="home-in">
+            <p class="eyebrow">Herramienta docente de metrología · Universidad Austral de Chile</p>
+            <h1>Laboratorio de Calibración</h1>
+            <p class="lead">Calibra los sensores de tus proyectos con Arduino o ESP32: una guía paso a paso, el cálculo de la incertidumbre hecho,
+                la ecuación de corrección lista para tu código y un protocolo en PDF para el laboratorio.</p>
+            <div class="searchbox">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+                <input id="q" type="search" autocomplete="off" placeholder="¿Qué sensor quieres calibrar?  Ej.: MPU6050, NTC, HX711, DHT22" aria-label="Buscar sensor o módulo">
+                <kbd title="Atajo de teclado">/</kbd>
+            </div>
+            <p class="quick" id="quick">Prueba:
+                <button type="button" data-q="MPU6050">MPU6050</button>
+                <button type="button" data-q="BNO055">BNO055</button>
+                <button type="button" data-q="HX711">HX711</button>
+                <button type="button" data-q="DS18B20">DS18B20</button>
+                <button type="button" data-q="HC-SR04">HC-SR04</button>
+                <button type="button" data-q="DHT22">DHT22</button>
+                <button type="button" data-q="presión">presión</button>
+            </p>
         </div>
     </header>
 
-    <main>
-        <h2>Posturografía</h2>
-        <div class="modules">
-            <a class="module" href="imu.html">
-                <span class="tag">Sensor inercial · ángulo</span>
-                <h3>Posturógrafo IMU</h3>
-                <p>Calibra el ángulo de una IMU de 3, 6 o 9 DOF o de un inclinómetro contra una referencia geométrica. Ganancia, offset, acoplamiento entre ejes, histéresis, flexión de la barra y matriz de corrección 3D.</p>
-            </a>
-            <a class="module" href="imu-crudo.html">
-                <span class="tag">Sensor inercial · crudo</span>
-                <h3>IMU: acelerómetro, giroscopio, magnetómetro</h3>
-                <p>Acelerómetro por 6 posiciones (escala, sesgo, desalineación), giroscopio (sesgo, Allan, escala por giro conocido) y magnetómetro (hierro duro y blando).</p>
-            </a>
-            <a class="module" href="balanza.html">
-                <span class="tag">Plataforma de fuerza</span>
-                <h3>Posturógrafo de balanza</h3>
-                <p>Plataforma con 4 celdas de carga y HX711. Obtiene el factor de cada celda con masas conocidas y valida la fuerza vertical y el centro de presión (CoP).</p>
-            </a>
-        </div>
+    <main class="home-main">
+        <!-- Resultados de búsqueda (reemplazan al resto mientras se escribe) -->
+        <section id="results" hidden aria-live="polite">
+            <h2 id="results-title"></h2>
+            <div class="tiles" id="results-list"></div>
+        </section>
 
-        <h2>Presión y caudal</h2>
-        <div class="modules">
-            <a class="module" href="presion.html">
-                <span class="tag">Manómetro de agua</span>
-                <h3>Sensor de presión</h3>
-                <p>Calibra un sensor de presión diferencial con tubo en U. Entrega la ecuación V → ΔP con su incertidumbre, lista para usar en los módulos de caudal.</p>
-            </a>
-            <a class="module" href="venturi.html">
-                <span class="tag">Caudal</span>
-                <h3>Medidor Venturi</h3>
-                <p>Valida un Venturi contra caudal de referencia (volumétrico o caudalímetro). Obtiene el coeficiente de descarga C<sub>d</sub> y su dependencia del Reynolds.</p>
-            </a>
-            <a class="module" href="pitot.html">
-                <span class="tag">Velocidad</span>
-                <h3>Tubo de Pitot</h3>
-                <p>Valida un Pitot contra un anemómetro o un caudal conocido. Obtiene el coeficiente C y la ecuación v = K·√ΔP.</p>
-            </a>
-        </div>
+        <div id="home-sections">
+            <section id="continue" hidden>
+                <h2>Continuar donde quedaste</h2>
+                <div class="resume" id="resume"></div>
+            </section>
 
-        <h2 id="catalogo">Catálogo de sensores</h2>
-        <p class="muted">Cada sensor tiene su guía, referencia recomendada, plan de medición y modelo de curva. Si el suyo no está, use el <a href="sensor.html?p=generico">sensor genérico</a>.</p>
-        <div class="field" style="max-width:420px"><input type="text" id="buscar" placeholder="Buscar sensor (ej. DHT22, NTC, HC-SR04, pH)…" aria-label="Buscar sensor"></div>
-        <div id="catalog"></div>
+            <section id="start">
+                <h2>¿Primera vez?</h2>
+                <ol class="start-steps">
+                    <li><a href="fundamentos.html"><strong>Lee los fundamentos</strong><span>Error, repetibilidad, incertidumbre y cuándo un sensor “cumple”. 15 minutos, una sola vez.</span></a></li>
+                    <li><a href="#catalogo"><strong>Elige tu sensor</strong><span>Cada ficha dice qué referencia o equipo necesitas para calibrarlo.</span></a></li>
+                    <li><a href="sensor.html?p=ds18b20&amp;ejemplo"><strong>Mira un ejemplo</strong><span>Todos los módulos traen datos simulados para ver resultados antes de medir.</span></a></li>
+                </ol>
+            </section>
 
-        <h2>Antes de empezar</h2>
-        <div class="card">
-            <p><a href="fundamentos.html"><strong>Fundamentos de calibración →</strong></a> Qué es error, sesgo, repetibilidad, histéresis, incertidumbre y cómo decidir si un sensor “cumple”.
-                Léalo una vez: todos los módulos usan estos conceptos.</p>
-            <p class="muted small">Los datos quedan guardados en este navegador. Funciona sin internet: basta abrir <code>index.html</code>.
-                Para cambiar de computador use “Respaldo completo” en la pestaña Guardados de cualquier módulo.</p>
+            <section id="posturografia">
+                <h2>Posturografía</h2>
+                <p class="muted section-lead">Los tres módulos del posturógrafo: el ángulo que entrega la IMU, sus sensores internos y la plataforma de fuerza.</p>
+                <div class="featured" id="featured"></div>
+            </section>
+
+            <section id="catalogo">
+                <div class="cat-head">
+                    <h2>Todos los sensores <span class="count" id="cat-count"></span></h2>
+                    <a class="muted small" href="sensor.html?p=generico">¿No está el tuyo? Usa el sensor genérico →</a>
+                </div>
+                <div class="fam-filter" id="fam-filter" role="toolbar" aria-label="Filtrar por familia"></div>
+                <div id="cat-list"></div>
+            </section>
         </div>
     </main>
+
+    <footer class="foot home-foot">
+        <span>Laboratorio de Calibración · Universidad Austral de Chile</span>
+        <span>Nicolás Baier Quezada · colaboración de Vanessa Uribe</span>
+        <span><a href="https://github.com/Debaq/laboratorio-calibracion">Código fuente</a> · <a href="LICENSE">Licencia MIT</a></span>
+        <span class="muted">Funciona sin internet. Los datos quedan en este navegador: use “Respaldo completo” en Guardados para moverlos.</span>
+    </footer>
 
     <script src="js/core/physics.js"></script>
     <script src="js/perfiles/registry.js"></script>
@@ -78,30 +85,113 @@
     <script src="js/perfiles/fuerza-electricos.js"></script>
     <script src="js/perfiles/varios.js"></script>
     <script src="js/perfiles/biomedicos.js"></script>
+    <script src="js/catalogo.js"></script>
     <script>
-        (function () {
-            const R = window.LabProfiles;
-            const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-            function render(q) {
-                const nq = norm(q || '');
-                const html = R.FAMILIES.map(f => {
-                    const items = R.list().filter(p => p.family === f.id && (!nq || norm(`${p.name} ${p.examples} ${p.quantity} ${f.name}`).includes(nq)));
-                    if (!items.length) return '';
-                    return `<h3>${esc(f.name)}</h3><div class="modules">${items.map(p => `
-                        <a class="module" href="sensor.html?p=${p.id}">
-                            <span class="tag">${esc(p.quantity)} · ${p.mode === 'comparacion' ? 'comparación' : 'calibración'}</span>
-                            <h3>${esc(p.name)}</h3><p>${esc(p.examples || '')}</p></a>`).join('')}</div>`;
-                }).join('');
-                document.getElementById('catalog').innerHTML = html || '<p class="muted">Ningún sensor coincide. Pruebe con el <a href="sensor.html?p=generico">sensor genérico</a>.</p>';
-            }
-            document.getElementById('buscar').addEventListener('input', e => render(e.target.value));
-            render('');
-        })();
-    </script>
+    (function () {
+        'use strict';
+        const C = window.LabCatalog, R = window.LabProfiles;
+        const $ = s => document.querySelector(s);
+        const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const all = C.items();
+        const famIdx = id => Math.max(0, R.FAMILIES.findIndex(f => f.id === id));
 
-    <footer class="foot">
-        Laboratorio de Calibración · Universidad Austral de Chile · Nicolás Baier Quezada y Vanessa Uribe
-    </footer>
+        function tile(it, withFamily) {
+            const badge = it.kind === 'modulo' ? '<span class="badge info">Módulo completo</span>'
+                : it.mode === 'comparacion' ? '<span class="badge warn" title="Se compara con un equipo comercial (análisis de Bland–Altman)">Comparación</span>' : '';
+            const meta = [withFamily ? `<span class="tile-fam">${esc(C.famName(it.family))}</span>` : '', badge].filter(Boolean).join('');
+            return `<a class="tile" href="${it.href}" style="--fc:var(--c${famIdx(it.family) % 6 + 1})">
+                <strong class="tile-name">${esc(it.name)}</strong>
+                ${meta ? `<span class="tile-meta">${meta}</span>` : ''}
+                <span class="tile-ex">${esc(it.examples)}</span>
+                ${it.needs ? `<span class="tile-need"><b>Necesitas:</b> ${esc(it.needs)}</span>` : ''}
+            </a>`;
+        }
+
+        // ---------- Posturografía destacada ----------
+        $('#featured').innerHTML = all.filter(it => it.featured).map(it => `
+            <a class="feature" href="${it.href}">
+                <strong>${esc(it.name)}</strong>
+                <span class="feature-sum">${esc(it.summary)}</span>
+                <span class="tile-ex">${esc(it.examples)}</span>
+                <span class="tile-need"><b>Necesitas:</b> ${esc(it.needs)}</span>
+                <span class="feature-go">Abrir →</span>
+            </a>`).join('');
+
+        // ---------- Catálogo con filtro por familia ----------
+        let fam = 'todas';
+        try { fam = sessionStorage.getItem('labcal-fam') || 'todas'; } catch (e) { /* sin almacenamiento */ }
+        function renderCatalog() {
+            const fams = R.FAMILIES.filter(f => all.some(it => it.family === f.id));
+            $('#fam-filter').innerHTML = [['todas', 'Todas', all.length], ...fams.map(f => [f.id, f.name, all.filter(it => it.family === f.id).length])]
+                .map(([id, name, n]) => `<button type="button" data-fam="${id}" aria-pressed="${fam === id}">${esc(name)} <span>${n}</span></button>`).join('');
+            $('#cat-count').textContent = all.length;
+            const shown = fams.filter(f => fam === 'todas' || f.id === fam);
+            // En pantallas angostas, con "Todas" las familias se muestran plegadas (nombre + sensores) para no hacer una lista interminable
+            const folded = fam === 'todas' && window.matchMedia('(max-width: 720px)').matches;
+            $('#cat-list').innerHTML = shown.map(f => {
+                const list = all.filter(it => it.family === f.id).sort((a, b) => (a.kind === 'modulo' ? 0 : 1) - (b.kind === 'modulo' ? 0 : 1));
+                return `<details class="fam" ${folded ? '' : 'open'}><summary><span class="fam-title">${esc(f.name)} <span class="count">${list.length}</span></span>
+                    <span class="fam-teaser">${esc(list.map(it => it.name.replace(/\s*\(.*?\)/g, '')).join(' · '))}</span></summary>
+                    <div class="tiles">${list.map(it => tile(it)).join('')}</div></details>`;
+            }).join('');
+            document.querySelectorAll('#fam-filter button').forEach(b => b.addEventListener('click', () => {
+                fam = b.dataset.fam;
+                try { sessionStorage.setItem('labcal-fam', fam); } catch (e) { /* sin almacenamiento */ }
+                renderCatalog();
+            }));
+        }
+        renderCatalog();
+
+        // ---------- Continuar ----------
+        function ago(t) {
+            if (!t) return '';
+            const m = Math.round((Date.now() - t) / 60000);
+            if (m < 1) return 'recién';
+            if (m < 60) return `hace ${m} min`;
+            const h = Math.round(m / 60);
+            if (h < 24) return `hace ${h} h`;
+            const d = Math.round(h / 24);
+            return d === 1 ? 'ayer' : `hace ${d} días`;
+        }
+        const act = C.activity();
+        if (act.length) {
+            $('#continue').hidden = false;
+            $('#resume').innerHTML = act.slice(0, 6).map(a => a.type === 'draft'
+                ? `<a class="resume-card" href="${a.item.href}#${a.n ? 'medir' : 'config'}">
+                    <span class="kicker">En curso · ${esc(a.item.name)}</span><strong>${esc(a.name)}</strong>
+                    <span class="muted small">${a.n} mediciones${a.time ? ' · ' + ago(a.time) : ''}${a.saved ? '' : ' · <span class="badge warn">sin guardar</span>'}</span></a>`
+                : `<a class="resume-card" href="${a.item.href}#guardados">
+                    <span class="kicker">Guardados · ${esc(a.item.name)}</span><strong>${a.n} experimento${a.n > 1 ? 's' : ''}</strong>
+                    <span class="muted small">${a.time ? 'último ' + ago(a.time) : ''}</span></a>`).join('');
+        }
+
+        // ---------- Búsqueda ----------
+        const q = $('#q');
+        if (window.matchMedia('(max-width: 520px)').matches) q.placeholder = 'Busca tu sensor: MPU6050, NTC…';
+        function runSearch() {
+            const text = q.value.trim();
+            const on = text.length > 0;
+            $('#results').hidden = !on;
+            $('#home-sections').hidden = on;
+            if (!on) return;
+            const found = C.search(all, text);
+            $('#results-title').innerHTML = found.length
+                ? `${found.length} resultado${found.length > 1 ? 's' : ''} para “${esc(text)}”`
+                : `Nada para “${esc(text)}”`;
+            $('#results-list').innerHTML = found.length ? found.map(it => tile(it, true)).join('')
+                : `<p class="empty">Pruebe con el modelo del chip (p. ej. <em>MPU6050</em>) o la magnitud (<em>temperatura</em>, <em>distancia</em>).
+                   Si su sensor no está, el <a href="sensor.html?p=generico">sensor genérico</a> sirve para cualquier magnitud.</p>`;
+        }
+        q.addEventListener('input', runSearch);
+        q.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { q.value = ''; runSearch(); }
+            if (e.key === 'Enter') { const first = $('#results-list .tile'); if (first) first.click(); }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === '/' && document.activeElement !== q && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); q.focus(); }
+        });
+        document.querySelectorAll('#quick [data-q]').forEach(b => b.addEventListener('click', () => { q.value = b.dataset.q; runSearch(); q.focus(); }));
+    })();
+    </script>
 </body>
 </html>

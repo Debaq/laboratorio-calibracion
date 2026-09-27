@@ -15,7 +15,10 @@ Cada módulo:
 3. **Calcula** error, sesgo, repetibilidad, histéresis, no linealidad e **incertidumbre (GUM, k = 2)**, y decide si el sensor **cumple** una tolerancia.
 4. **Entrega** la ecuación de corrección con su código C/Arduino, y un **protocolo de ensayo en PDF** con la hoja de registro para el laboratorio.
 
-<p align="center"><img src="docs/img/inicio.png" width="820" alt="Página de inicio con los módulos y el catálogo de sensores"></p>
+La página de inicio es un buscador: escriba el modelo del chip (*MPU6050*, *HX711*, *DS18B20*…) o la magnitud (*temperatura*, *distancia*).
+Cada ficha dice qué referencia o equipo se necesita, y la sección *Continuar* retoma los experimentos en curso.
+
+<p align="center"><img src="docs/img/inicio.png" width="820" alt="Página de inicio: buscador, pasos para empezar, posturografía y catálogo por familias"></p>
 
 ## Uso
 
@@ -57,16 +60,14 @@ Un **motor genérico** más un **perfil por sensor** (`sensor.html?p=<id>`). Cad
 
 | Familia | Sensores | Referencia / particularidad |
 |---|---|---|
+| Movimiento e inclinación | Potenciómetro/encoder, sensor de flexión (+ los módulos de IMU) | Goniómetro |
+| Fuerza y peso | Celda de carga + HX711, FSR (+ la plataforma del posturógrafo) | Masas conocidas; ley de potencia; histéresis y fluencia |
+| Presión y caudal | Barómetro BMP280/BME280, caudalímetro de turbina YF-S201 (+ módulos de presión, Venturi y Pitot) | Presión de estación desde QNH; factor K y su dependencia del caudal |
 | Temperatura | NTC, LM35/TMP36, DS18B20, termocupla K (MAX31855/6675), PT100/PT1000 (MAX31865), DHT22/SHT31/BME280 | Punto de hielo, ebullición corregida por presión, baño con termómetro patrón; Steinhart–Hart; α de la PT100; constante de tiempo τ |
-| Humedad y ambiente | DHT22, SHT31, BME280, AHT20; BMP280/BME280 barométrico | Soluciones salinas saturadas (Greenspan, 1977); presión de estación desde QNH |
+| Humedad, suelo y pH | DHT22, SHT31, BME280, AHT20; humedad de suelo capacitiva; electrodo de pH | Sales saturadas (Greenspan, 1977); método gravimétrico; buffers 4/7/10 y eficiencia de Nernst |
 | Distancia | HC-SR04, VL53L0X/L1X, Sharp GP2Y0A21 | Corrección de la velocidad del sonido por temperatura; modelo inverso |
-| Fuerza y peso | Celda de carga + HX711, FSR | Masas conocidas; ley de potencia; histéresis y fluencia |
-| Eléctricos | ADC de la placa (UNO, ESP32), ACS712, INA219/INA226 | Multímetro de referencia; no linealidad del ADC del ESP32 |
 | Luz | LDR, BH1750/TSL2561/VEML7700 | Luxómetro; ley de potencia |
-| Ángulo | Potenciómetro/encoder, sensor de flexión | Goniómetro |
-| Química | Electrodo de pH | Buffers 4/7/10; eficiencia de Nernst y offset |
-| Suelo | Humedad capacitiva | Método gravimétrico (secado en horno) |
-| Caudal | YF-S201 y similares | Volumétrico; factor K y su dependencia del caudal |
+| Electricidad | ADC de la placa (UNO, ESP32), ACS712, INA219/INA226 | Multímetro de referencia; no linealidad del ADC del ESP32 |
 | Biomédicos | SpO₂ y frecuencia cardiaca (MAX30102) | Comparación con equipo comercial: Bland–Altman, ARMS |
 | Otros | **Sensor genérico** | Magnitud y unidades libres, para cualquier sensor que no esté en la lista |
 
