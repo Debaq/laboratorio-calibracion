@@ -40,7 +40,8 @@
             `// Envía a ${BAUD} baudios el encabezado "${cols}" y luego una línea de datos${o.rawLoop ? '' : ` cada ${o.period} ms`}.`,
             ...(o.libs && o.libs.length ? [`// Bibliotecas (Herramientas → Administrar bibliotecas): ${o.libs.join(', ')}.`] : []),
             ...(o.wiring ? [`// Conexión: ${o.wiring}`] : []),
-            ...(o.comments || []).map(c => `// ${c}`)
+            ...(o.comments || []).map(c => `// ${c}`),
+            ...(o.globalsPre ? ['', o.globalsPre] : [])
         ];
         const commandLines = cmds.map(c => `    if (c == '${c.cmd}') {\n${indent(c.code, 6)}\n    }`).join('\n');
         const loopBody = o.rawLoop
@@ -100,8 +101,10 @@ float leerADC(int pin) {
   for (int i = 0; i < MUESTRAS; i++) suma += analogRead(pin);
   return (float)suma / MUESTRAS;
 }`;
+    /** Pines distintos para UNO y ESP32 (en el ESP32, GPIO 6–11 son de la flash y 1/3 del puerto serie). */
+    const byBoard = (uno, esp) => `#if defined(ESP32)\n${esp}\n#else\n${uno}\n#endif`;
     const ESP32_RES = '#if defined(ESP32)\nanalogReadResolution(12);   // ESP32: 12 bits (0–4095). Indíquelo en la Preparación.\n#endif';
-    const ADC_NOTE = 'En ESP32 use un pin del ADC1 (32–39) y ponga 12 bits en la Preparación.';
+    const ADC_NOTE = 'ESP32: A0 es el GPIO36 (VP); use pines del ADC1 (32–39), ponga 12 bits en la Preparación y nunca aplique más de 3,3 V al pin (alimente divisores y potenciómetros con 3,3 V).';
 
     /** Exige un modo de lectura concreto del perfil (cuentas ADC, divisor, µs…). */
     const needMode = (modeId, label) => cfg => cfg && cfg.readingMode && cfg.readingMode !== modeId
@@ -129,8 +132,8 @@ float leerADC(int pin) {
     // Sensores ambientales I²C / 1 hilo: temperatura, humedad y presión
     const ENV = {
         dht22: { label: 'DHT22 / DHT11', libs: ['DHT sensor library (Adafruit)', 'Adafruit Unified Sensor'], includes: ['"DHT.h"'],
-            wiring: 'DATA a D2 con resistencia de 10 kΩ a VCC (los módulos ya la traen).', period: 2000,
-            globals: 'DHT dht(2, DHT22);   // DHT11: cambie DHT22 por DHT11', setup: 'dht.begin();',
+            wiring: 'DATA a D2 (ESP32: GPIO4) con resistencia de 10 kΩ a VCC (los módulos ya la traen).', period: 2000,
+            globals: `${byBoard('const int PIN_DHT = 2;', 'const int PIN_DHT = 4;')}\nDHT dht(PIN_DHT, DHT22);   // DHT11: cambie DHT22 por DHT11`, setup: 'dht.begin();',
             read: 'float t = dht.readTemperature();\nfloat h = dht.readHumidity();\nif (isnan(t) || isnan(h)) { Serial.println("# error de lectura del DHT"); return; }',
             notes: ['El DHT22 se lee como máximo cada 2 s.'] },
         sht31: { label: 'SHT31 / SHT3x', libs: ['Adafruit SHT31 Library'], includes: ['<Wire.h>', '"Adafruit_SHT31.h"'],
@@ -171,6 +174,7 @@ float leerADC(int pin) {
             check: needMode('adc', 'cuentas del ADC (“Cuentas del ADC”)'),
             columns: ['t_ms', 'lectura'], period: 100,
             globals: ADC_GLOBALS('const int PIN_SENSOR = A0;', 16),
+            globalsPre: '#if !defined(__AVR__)\n#error "Esta variante usa la referencia interna de 1,1 V: solo UNO, Nano o Mega. En ESP32 use la variante Referencia de 5 V."\n#endif',
             setup: 'analogReference(INTERNAL);   // 1,1 V en UNO/Nano (Mega: INTERNAL1V1)\nanalogRead(PIN_SENSOR);      // descarta la primera lectura tras cambiar la referencia\ndelay(10);',
             loop: printRow([['leerADC(PIN_SENSOR)', 2]])
         })
@@ -179,9 +183,9 @@ float leerADC(int pin) {
     S.ds18b20 = [variant({
         id: 'ds18b20', label: 'DS18B20 (1-Wire, 12 bits)', title: 'DS18B20: temperatura en °C',
         libs: ['OneWire', 'DallasTemperature'], includes: ['<OneWire.h>', '<DallasTemperature.h>'],
-        wiring: 'DQ a D2 con resistencia de 4,7 kΩ entre DQ y VCC; VDD a 3,3–5 V.', notes: ['A 12 bits cada conversión tarda 750 ms.'],
+        wiring: 'DQ a D2 (ESP32: GPIO4) con resistencia de 4,7 kΩ entre DQ y VCC; VDD a 3,3–5 V (ESP32: 3,3 V).', notes: ['A 12 bits cada conversión tarda 750 ms.'],
         columns: ['t_ms', 'lectura'], period: 800, capture: { seconds: 4 },
-        globals: 'OneWire bus(2);\nDallasTemperature ds(&bus);',
+        globals: `${byBoard('const int PIN_1WIRE = 2;', 'const int PIN_1WIRE = 4;')}\nOneWire bus(PIN_1WIRE);\nDallasTemperature ds(&bus);`,
         setup: 'ds.begin();\nds.setResolution(12);   // 0,0625 °C',
         loop: `ds.requestTemperatures();\nfloat t = ds.getTempCByIndex(0);\nif (t == DEVICE_DISCONNECTED_C) { Serial.println("# DS18B20 no responde"); return; }\n${printRow([['t', 4]])}`
     })];
@@ -189,15 +193,15 @@ float leerADC(int pin) {
     S.termocupla = [
         variant({
             id: 'max31855', label: 'MAX31855', title: 'Termocupla K con MAX31855', libs: ['Adafruit MAX31855 library'], includes: ['<SPI.h>', '"Adafruit_MAX31855.h"'],
-            wiring: 'CLK a D3, CS a D4, DO a D5; VIN a 3,3–5 V.', columns: ['t_ms', 'lectura'], period: 250,
-            globals: 'Adafruit_MAX31855 tc(3, 4, 5);   // CLK, CS, DO', setup: 'delay(500);   // el MAX31855 necesita tiempo para estabilizarse\ntc.begin();',
+            wiring: 'CLK a D3, CS a D4, DO a D5 (ESP32: GPIO18, 5 y 19); VIN a 3,3–5 V.', columns: ['t_ms', 'lectura'], period: 250,
+            globals: `${byBoard('const int CLK = 3, CS = 4, DO_ = 5;', 'const int CLK = 18, CS = 5, DO_ = 19;')}\nAdafruit_MAX31855 tc(CLK, CS, DO_);`, setup: 'delay(500);   // el MAX31855 necesita tiempo para estabilizarse\ntc.begin();',
             loop: `double t = tc.readCelsius();\nif (isnan(t)) { Serial.println("# termocupla desconectada o en corto"); return; }\n${printRow([['t', 2]])}`
         }),
         variant({
             id: 'max6675', label: 'MAX6675', title: 'Termocupla K con MAX6675', libs: ['MAX6675 library (Adafruit)'], includes: ['"max6675.h"'],
-            wiring: 'SCK a D3, CS a D4, SO a D5; VCC a 5 V.', notes: ['El MAX6675 entrega pasos de 0,25 °C y convierte cada 220 ms.'],
+            wiring: 'SCK a D3, CS a D4, SO a D5 (ESP32: GPIO18, 5 y 19); VCC a 5 V (ESP32: 3,3 V).', notes: ['El MAX6675 entrega pasos de 0,25 °C y convierte cada 220 ms.'],
             columns: ['t_ms', 'lectura'], period: 300,
-            globals: 'MAX6675 tc(3, 4, 5);   // SCK, CS, SO', setup: 'delay(500);',
+            globals: `${byBoard('const int SCK_ = 3, CS = 4, SO = 5;', 'const int SCK_ = 18, CS = 5, SO = 19;')}\nMAX6675 tc(SCK_, CS, SO);`, setup: 'delay(500);',
             loop: `float t = tc.readCelsius();\nif (isnan(t)) { Serial.println("# termocupla desconectada"); return; }\n${printRow([['t', 2]])}`
         })
     ];
@@ -222,20 +226,20 @@ float leerADC(int pin) {
     S.pt100 = [variant({
         id: 'max31865', label: 'MAX31865 (resistencia en Ω)', title: 'PT100 / PT1000 con MAX31865: resistencia',
         libs: ['Adafruit MAX31865 library'], includes: ['<Adafruit_MAX31865.h>'],
-        wiring: 'CS a D10, SDI a D11, SDO a D12, CLK a D13. Puentes del módulo según 2, 3 o 4 hilos.',
+        wiring: 'CS a D10, SDI a D11, SDO a D12, CLK a D13 (ESP32: GPIO5, 23, 19 y 18). Puentes del módulo según 2, 3 o 4 hilos.',
         notes: ['RREF es la resistencia de referencia del módulo: 430 Ω para PT100, 4300 Ω para PT1000. Mídala si puede: su error es un error de ganancia.'],
         columns: ['t_ms', 'lectura'], period: 200,
-        globals: 'Adafruit_MAX31865 rtd(10, 11, 12, 13);   // CS, SDI, SDO, CLK\nconst float RREF = 430.0;                 // PT1000: 4300.0',
+        globals: `${byBoard('Adafruit_MAX31865 rtd(10, 11, 12, 13);   // CS, SDI, SDO, CLK', 'Adafruit_MAX31865 rtd(5, 23, 19, 18);    // CS, SDI, SDO, CLK')}\nconst float RREF = 430.0;                 // PT1000: 4300.0`,
         setup: 'rtd.begin(MAX31865_3WIRE);   // o MAX31865_2WIRE / MAX31865_4WIRE',
         loop: `uint16_t n = rtd.readRTD();\nuint8_t falla = rtd.readFault();\nif (falla) { Serial.print("# falla del MAX31865: 0x"); Serial.println(falla, HEX); rtd.clearFault(); return; }\nfloat r = RREF * n / 32768.0;   // Ω\n${printRow([['r', 3]])}`
     })];
 
     S.celda = [variant({
         id: 'hx711', label: 'HX711 (cuentas crudas)', title: 'Celda de carga con HX711: cuentas crudas',
-        libs: ['HX711 (bogde)'], includes: ['"HX711.h"'], wiring: 'DT a D3, SCK a D2; E+/E−/A+/A− a la celda.',
+        libs: ['HX711 (bogde)'], includes: ['"HX711.h"'], wiring: 'DT a D3, SCK a D2 (ESP32: GPIO16 y GPIO4; alimente el HX711 con 3,3 V); E+/E−/A+/A− a la celda.',
         notes: ['Entrega la lectura cruda, sin tare() ni set_scale(): la calibración la hace la página.', 'Con el pin RATE en VCC el HX711 entrega 80 lecturas/s (por defecto 10).'],
         columns: ['t_ms', 'lectura'], period: 100,
-        globals: 'HX711 hx;', setup: 'hx.begin(3, 2);   // DT, SCK',
+        globals: `${byBoard('const int DT = 3, SCK_ = 2;', 'const int DT = 16, SCK_ = 4;')}\nHX711 hx;`, setup: 'hx.begin(DT, SCK_);',
         loop: `if (!hx.wait_ready_timeout(500)) { Serial.println("# HX711 no responde"); return; }\n${printRow([['hx.read()']])}`
     })];
 
@@ -266,7 +270,7 @@ float leerADC(int pin) {
 
     S.acs712 = [analog({ title: 'ACS712: cuentas del ADC', mode: 'adc', modeLabel: 'cuentas del ADC (“Cuentas del ADC”)', n: 64,
         wiring: 'VCC a 5 V, GND a GND, OUT a A0. La corriente pasa por los bornes IP+ / IP−.',
-        notes: ['Mida el pin 5V con multímetro: la salida del ACS712 y la referencia del ADC dependen de él.'] })];
+        notes: ['Mida el pin 5V con multímetro: la salida del ACS712 y la referencia del ADC dependen de él.', 'ESP32: la salida llega a ≈ 4,5 V a plena escala: póngale un divisor (10 kΩ + 20 kΩ); la calibración lo absorbe.'] })];
 
     S.ina219 = [
         variant({
@@ -286,19 +290,21 @@ float leerADC(int pin) {
         })
     ];
 
+    const HCSR04_WIRING = 'TRIG a D9, ECHO a D10, VCC a 5 V. ESP32: TRIG a GPIO5 y ECHO a GPIO18 a través de un divisor (1 kΩ + 2 kΩ): el eco es de 5 V.';
+    const HCSR04_PINS = byBoard('const int TRIG = 9, ECHO = 10;', 'const int TRIG = 5, ECHO = 18;   // ECHO con divisor: el HC-SR04 entrega 5 V');
     const HCSR04_SETUP = 'pinMode(TRIG, OUTPUT);\npinMode(ECHO, INPUT);';
     const HCSR04_READ = 'digitalWrite(TRIG, LOW);\ndelayMicroseconds(2);\ndigitalWrite(TRIG, HIGH);\ndelayMicroseconds(10);\ndigitalWrite(TRIG, LOW);\nunsigned long us = pulseIn(ECHO, HIGH, 30000);   // máx. 30 ms ≈ 5 m\nif (us == 0) { Serial.println("# sin eco"); return; }';
     S.hcsr04 = [
         variant({
-            id: 'us', label: 'Tiempo de eco en µs (recomendado)', title: 'HC-SR04: tiempo de eco', wiring: 'TRIG a D9, ECHO a D10, VCC a 5 V.',
+            id: 'us', label: 'Tiempo de eco en µs (recomendado)', title: 'HC-SR04: tiempo de eco', wiring: HCSR04_WIRING,
             notes: ['La página corrige la velocidad del sonido con la temperatura del aire.'], check: needMode('us', 'el tiempo de eco (“Tiempo de eco (µs)”)'),
-            columns: ['t_ms', 'lectura'], period: 60, globals: 'const int TRIG = 9, ECHO = 10;', setup: HCSR04_SETUP,
+            columns: ['t_ms', 'lectura'], period: 60, globals: HCSR04_PINS, setup: HCSR04_SETUP,
             loop: `${HCSR04_READ}\n${printRow([['us']])}`
         }),
         variant({
-            id: 'cm', label: 'Distancia en cm (como las librerías)', title: 'HC-SR04: distancia con c fija (343 m/s)', wiring: 'TRIG a D9, ECHO a D10, VCC a 5 V.',
+            id: 'cm', label: 'Distancia en cm (como las librerías)', title: 'HC-SR04: distancia con c fija (343 m/s)', wiring: HCSR04_WIRING,
             check: needMode('cm', 'la distancia en cm (“Distancia calculada por la librería”)'),
-            columns: ['t_ms', 'lectura'], period: 60, globals: 'const int TRIG = 9, ECHO = 10;', setup: HCSR04_SETUP,
+            columns: ['t_ms', 'lectura'], period: 60, globals: HCSR04_PINS, setup: HCSR04_SETUP,
             loop: `${HCSR04_READ}\n${printRow([['us / 58.3', 2]])}   // c = 343 m/s (20 °C)`
         })
     ];
@@ -355,19 +361,19 @@ float leerADC(int pin) {
 
     S.ph = [analog({ title: 'Electrodo de pH con módulo amplificador: cuentas del ADC', mode: 'adc', modeLabel: 'la salida del módulo en cuentas ADC', n: 64, period: 200,
         wiring: 'Po del módulo (PH-4502C u otro) a A0, V+ a 5 V, G a GND.',
-        notes: ['No mueva el potenciómetro de offset del módulo durante la calibración.'] })];
+        notes: ['No mueva el potenciómetro de offset del módulo durante la calibración.', 'ESP32: la salida Po puede superar 3,3 V: use un divisor o ajuste el offset para que no pase de 3,1 V.'] })];
 
     S.suelo = [analog({ title: 'Humedad de suelo capacitiva: cuentas del ADC', n: 32, period: 200,
         wiring: 'VCC a 3,3–5 V (el mismo que usará en terreno), GND a GND, AOUT a A0.' })];
 
     S.yfs201 = [variant({
         id: 'yfs201', label: 'Conteo por interrupción', title: 'Caudalímetro de turbina: pulsos por interrupción',
-        wiring: 'cable amarillo (señal) a D2, rojo a 5 V, negro a GND. D2 usa la resistencia pull-up interna.',
+        wiring: 'cable amarillo (señal) a D2 (ESP32: GPIO27 con divisor 10 kΩ + 20 kΩ, la señal puede ser de 5 V), rojo a 5 V, negro a GND.',
         notes: ['Antes de recolectar presione “Poner conteo en cero”. Cierre la válvula y capture: pulsos y tiempo quedan fijos.',
             'time_s es el tiempo entre el primer y el último pulso: si no cronometra aparte, sirve como tiempo de recolección.'],
         columns: ['t_ms', 'lectura', 'time_s'], period: 200, capture: { seconds: 1, stat: 'last' },
         commands: [{ cmd: 'z', label: 'Poner conteo en cero', code: 'noInterrupts();\npulsos = 0;\nprimero = ultimoPulso = 0;\ninterrupts();' }],
-        globals: 'const int PIN_PULSOS = 2;   // UNO: D2 o D3 (pines con interrupción)\nvolatile unsigned long pulsos = 0, primero = 0, ultimoPulso = 0;\n\nvoid contarPulso() {\n  unsigned long t = millis();\n  if (pulsos == 0) primero = t;\n  ultimoPulso = t;\n  pulsos++;\n}',
+        globals: `${byBoard('const int PIN_PULSOS = 2;   // UNO: D2 o D3 (pines con interrupción)', 'const int PIN_PULSOS = 27;')}\n#ifndef IRAM_ATTR\n#define IRAM_ATTR   // atributo de interrupciones del ESP32/ESP8266: en AVR no hace nada\n#endif\nvolatile unsigned long pulsos = 0, primero = 0, ultimoPulso = 0;\n\nvoid IRAM_ATTR contarPulso() {\n  unsigned long t = millis();\n  if (pulsos == 0) primero = t;\n  ultimoPulso = t;\n  pulsos++;\n}`,
         setup: 'pinMode(PIN_PULSOS, INPUT_PULLUP);\nattachInterrupt(digitalPinToInterrupt(PIN_PULSOS), contarPulso, FALLING);',
         loop: `noInterrupts();\nunsigned long n = pulsos, t1 = primero, t2 = ultimoPulso;\ninterrupts();\n${printRow([['n'], ['(t2 - t1) / 1000.0', 2]])}`
     })];
@@ -490,11 +496,11 @@ ${printRow([['e.x()', 3], ['e.z()', 3], ['e.y()', 3]])}`
 
     M.balanza = [variant({
         id: 'hx711x4', label: '4 × HX711 (cuentas crudas)', title: 'Plataforma de fuerza: 4 HX711 sincronizados', libs: ['HX711 (bogde)'], includes: ['"HX711.h"'],
-        wiring: 'DOUT de las celdas 1–4 a D2, D4, D6, D8; SCK a D3, D5, D7, D9.',
+        wiring: 'DOUT de las celdas 1–4 a D2, D4, D6, D8; SCK a D3, D5, D7, D9. ESP32: DOUT a GPIO16, 17, 18, 19 y SCK a GPIO25, 26, 27, 14 (HX711 a 3,3 V).',
         notes: ['Ponga el pin RATE de cada HX711 en VCC para 80 Hz (en muchos módulos es un puente a soldar).',
             'Sirve para el ensayo estático (captura el promedio de c1…c4) y para grabar el ruido de fondo y el ensayo dinámico.'],
         columns: ['t_ms', 'c1', 'c2', 'c3', 'c4'], capture: { seconds: 2 },
-        globals: 'const int DOUT[4] = {2, 4, 6, 8};\nconst int SCK_[4] = {3, 5, 7, 9};\nHX711 hx[4];',
+        globals: `${byBoard('const int DOUT[4] = {2, 4, 6, 8};\nconst int SCK_[4] = {3, 5, 7, 9};', 'const int DOUT[4] = {16, 17, 18, 19};\nconst int SCK_[4] = {25, 26, 27, 14};')}\nHX711 hx[4];`,
         setup: 'for (int i = 0; i < 4; i++) hx[i].begin(DOUT[i], SCK_[i]);',
         rawLoop: `// Espera a que los 4 tengan dato nuevo: así las muestras quedan lo más juntas posible
 if (!(hx[0].is_ready() && hx[1].is_ready() && hx[2].is_ready() && hx[3].is_ready())) return;
@@ -508,7 +514,8 @@ Serial.println();`
 
     /** Sensor de presión analógico: tensión (V) o cuentas en una o dos entradas. */
     const pressure = (cols, unitOf) => {
-        const pins = cols.length === 1 ? 'const int PIN[1] = {A0};' : 'const int PIN[2] = {A0, A1};   // P₁ en A0, P₂ en A1';
+        const pins = cols.length === 1 ? 'const int PIN[1] = {A0};   // ESP32: GPIO36 (VP)'
+            : byBoard('const int PIN[2] = {A0, A1};   // P₁ en A0, P₂ en A1', 'const int PIN[2] = {36, 39};  // P₁ en GPIO36 (VP), P₂ en GPIO39 (VN)');
         const unitCheck = want => cfg => {
             const u = unitOf(cfg);
             return u && u !== want ? `Este sketch entrega ${want === 'V' ? 'voltios' : 'cuentas del ADC'}, pero la salida configurada está en ${u}.` : null;
@@ -517,9 +524,10 @@ Serial.println();`
             variant({
                 id: 'volt', label: `Tensión en V (${cols.length === 1 ? 'A0' : 'A0 y A1'})`, title: 'Sensor de presión diferencial: tensión de salida',
                 wiring: cols.length === 1 ? 'Vout del sensor a A0 (MPX5010DP: pin 1), 5 V y GND.' : 'Vout de P₁ a A0 y de P₂ a A1, 5 V y GND.',
-                notes: ['VREF: mida el pin 5V con multímetro y escríbalo en el sketch (el sensor es ratiométrico: su salida también depende de él).', ADC_NOTE],
+                notes: ['VREF: mida el pin 5V con multímetro y escríbalo en el sketch (el sensor es ratiométrico: su salida también depende de él).',
+                    'ESP32: el MPX5010DP entrega hasta 4,7 V: póngale un divisor (10 kΩ + 20 kΩ) y calibre con el divisor puesto.', ADC_NOTE],
                 check: unitCheck('V'), columns: ['t_ms', ...cols], period: 100,
-                globals: `${ADC_GLOBALS(pins, 64)}\nconst float VREF = 5.00;     // mida el pin 5V con multímetro\nconst float CUENTAS = 1023.0; // ESP32: 4095.0`,
+                globals: `${ADC_GLOBALS(pins, 64)}\n${byBoard('const float VREF = 5.00;      // mida el pin 5V con multímetro\nconst float CUENTAS = 1023.0;', 'const float VREF = 3.30;      // aproximado: el ADC del ESP32 no es lineal (la calibración lo absorbe)\nconst float CUENTAS = 4095.0;')}`,
                 setup: ESP32_RES,
                 loop: printRow(cols.map((c, i) => [`leerADC(PIN[${i}]) * VREF / CUENTAS`, 4]))
             }),
